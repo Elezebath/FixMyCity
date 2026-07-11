@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-fixmycity}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      args:
+        JAR_FILE: target/*.jar
+    container_name: fixmycity-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-fixmycity}
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      SERVER_PORT: ${SERVER_PORT:-3100}
+    ports:
+      - "${SERVER_PORT:-3100}:${SERVER_PORT:-3100}"
+
+volumes:
+  mysql-data:

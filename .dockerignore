@@ -1,0 +1,9 @@
+.git/
+.gitignore
+.idea/
+*.iml
+.mvn/wrapper/maven-wrapper.jar
+.env
+*.env
+HELP.md
+.github/
