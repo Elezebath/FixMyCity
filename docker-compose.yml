@@ -35,5 +35,13 @@ services:
     ports:
       - "${SERVER_PORT:-3100}:${SERVER_PORT:-3100}"
 
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    depends_on:
+      - mysql
+
 volumes:
   mysql-data:
