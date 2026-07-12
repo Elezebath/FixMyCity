@@ -18,6 +18,7 @@ Civic incident tracking system with role-based access (Citizen, Manager, Employe
 
 ## Project Structure
 
+Tests are not included in this sctructure diagram, but they follow the standard Maven layout (`src/test/java/...`).
 ```
 FixMyCity
 ├── .github/workflows/
@@ -104,7 +105,6 @@ FixMyCity
 
 - **Self-hosted runner** is not provisioned/registered — `deploy.yml` will not actually run until this is set up.
 - **Portal deployment configuration** (`portal.acnbootcamp.lv`) — not yet connected; need to check with bootcamp docs/mentor on exact requirements.
-- **Test infrastructure** (JUnit 5 + Mockito) — default `FixmycityApplicationTests` currently fails when run without a live MySQL instance (`@SpringBootTest` tries to load a real DataSource). Use `mvn clean package -DskipTests` for now. **This is being set up next** — likely via an H2 in-memory profile or Testcontainers for integration tests.
 - **JWT-based authentication** — currently using HTTP Basic as a placeholder.
 - **Core domain entities** (`Incident`, etc.) — not yet implemented. `User`/auth is the only domain logic so far.
 - **Maven wrapper (`.mvn/`) may be missing** in some local copies of the project — if `./mvnw` doesn't work, regenerate it with `mvn wrapper:wrapper -Dmaven=3.9.6`.
@@ -114,8 +114,8 @@ FixMyCity
 ## Running Locally
 
 ```bash
-# Build the jar (skip tests until test infra is set up)
-mvn clean package -DskipTests
+# Build the jar
+mvn clean package
 
 # Start app + MySQL (+ Adminer)
 docker compose up --build
@@ -134,3 +134,22 @@ curl -X POST http://localhost:3100/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"password123","fullName":"Test User","role":"CITIZEN"}'
 ```
+### Setup
+- **JUnit 5 + Mockito** via Spring Boot test starters.
+- Test profile uses **H2 in-memory DB** (`MODE=MySQL`), activated with `@ActiveProfiles("test")`.
+- Tests run independently from Docker/MySQL (`mvn clean test` works standalone).
+
+### Test Data Builders
+- `UserTestDataBuilder` provides reusable test entities with defaults.
+- New entities should have their own `<Entity>TestDataBuilder` using the same pattern.
+
+### Test Types
+- **Unit tests** — services with Mockito mocks.
+- **Repository tests** — `@DataJpaTest` with custom H2 config preserved.
+- **Controller tests** — `@WebMvcTest` + `@Import(SecurityConfig.class)` for secured endpoints.
+
+### Definition of Done
+Every new feature must include related unit and/or integration tests.
+
+### Known Gaps
+- JWT authentication is not implemented yet. Current security uses temporary HTTP Basic Auth.
