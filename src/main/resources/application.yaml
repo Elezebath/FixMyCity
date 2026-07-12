@@ -17,6 +17,12 @@ spring:
         format_sql: true
     database-platform: org.hibernate.dialect.MySQLDialect
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
 server:
   port: ${SERVER_PORT:3100} # To be changed
 

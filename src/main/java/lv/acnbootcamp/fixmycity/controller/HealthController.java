@@ -3,7 +3,13 @@ package lv.acnbootcamp.fixmycity.controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// test controller for health check
+/**
+ * Simple health-check controller used to verify that the application
+ * is up and reachable (e.g. after a Docker/CI deployment).
+ * Not part of the core business logic - safe to remove or replace
+ * with Spring Boot Actuator's /actuator/health later.
+ */
+
 @RestController
 public class HealthController {
 
