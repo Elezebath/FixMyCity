@@ -3,6 +3,7 @@ package lv.acnbootcamp.fixmycity.config;
 import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -43,6 +44,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // will be changed later
                         .requestMatchers(
+                                "/",
                                 "/ping",
                                 "/actuator/health",
                                 "/swagger-ui/**",
@@ -50,6 +52,7 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api/auth/register"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/incidents/**").permitAll()
                         .requestMatchers("/api/incidents/**").hasAnyRole("CITIZEN", "MANAGER", "ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

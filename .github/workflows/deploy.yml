@@ -90,17 +90,6 @@ jobs:
       - name: Build and start stack
         run: docker compose -f docker-compose.resolved.yml up -d --build
 
-      - name: Debug adminer connectivity
-        run: |
-          echo "=== Visi konteineriai ==="
-          docker ps -a
-          echo "=== Adminer logai ==="
-          docker compose -f docker-compose.resolved.yml logs adminer || true
-          echo "=== Ar 3101 klausosi host'e ==="
-          ss -tlnp | grep 3101 || echo "3101 NEKLAUSO host'e"
-          echo "=== Curl iš vidaus ==="
-          curl -I http://localhost:3101 || echo "FAILED localhost:3101"
-
       - name: Check running containers
         run: docker ps -a | grep fixmycity
 
