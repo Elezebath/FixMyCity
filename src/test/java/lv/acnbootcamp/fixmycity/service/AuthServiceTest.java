@@ -14,6 +14,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import lv.acnbootcamp.fixmycity.security.JwtService;
+import org.springframework.security.authentication.AuthenticationManager;
+import lv.acnbootcamp.fixmycity.dto.LoginRequest;
+import lv.acnbootcamp.fixmycity.dto.LoginResponse;
+import lv.acnbootcamp.fixmycity.security.UserDetailsImpl;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.BadCredentialsException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,16 +38,23 @@ class AuthServiceTest {
 
     private AuthService authService;
 
+    @Mock
+    private AuthenticationManager authenticationManager;
+
+    @Mock
+    private JwtService jwtService;
+
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userRepository, passwordEncoder);
+        authService = new AuthService(userRepository, passwordEncoder, authenticationManager,
+                jwtService);
     }
 
     @Test
     void register_savesNewUser_whenEmailNotTaken() {
         // given
         RegisterRequest request = new RegisterRequest(
-                "new.user@example.com", "password123", "New User", Role.CITIZEN);
+                "new.user@example.com", "password123", "New User");
 
         when(userRepository.existsByEmail(request.email())).thenReturn(false);
         when(passwordEncoder.encode(request.password())).thenReturn("hashed-password");
@@ -49,7 +64,7 @@ class AuthServiceTest {
                 .withEmail(request.email())
                 .withPassword("hashed-password")
                 .withFullName(request.fullName())
-                .withRole(request.role())
+                .withRole(Role.CITIZEN)
                 .build();
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
@@ -65,13 +80,21 @@ class AuthServiceTest {
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(userCaptor.capture());
         assertThat(userCaptor.getValue().getPassword()).isEqualTo("hashed-password");
+
+        // Verify that the user is created with the expected registration data
+        // and that the CITIZEN role is assigned by the backend
+        assertThat(userCaptor.getValue().getRole()).isEqualTo(Role.CITIZEN);
+        assertThat(userCaptor.getValue().getEmail()).isEqualTo(request.email());
+        assertThat(userCaptor.getValue().getFullName()).isEqualTo(request.fullName());
+        // Verify that the password encoder was called with the submitted password
+        verify(passwordEncoder).encode(request.password());
     }
 
     @Test
     void register_throwsException_whenEmailAlreadyExists() {
         // given
         RegisterRequest request = new RegisterRequest(
-                "existing@example.com", "password123", "Existing User", Role.CITIZEN);
+                "existing@example.com", "password123", "Existing User");
         when(userRepository.existsByEmail(request.email())).thenReturn(true);
 
         // when / then
@@ -81,5 +104,83 @@ class AuthServiceTest {
 
         // save() should never be reached if the email check fails fast
         verify(userRepository, never()).save(any());
+        //verify that password hashing never happens
+        verify(passwordEncoder, never()).encode(anyString());
     }
+
+    @Test
+    void login_returnsJwtAndUserData_whenCredentialsAreValid() {
+        // given
+        LoginRequest request = new LoginRequest(
+                "citizen@example.com",
+                "password123"
+        );
+
+        User user = UserTestDataBuilder.aUser()
+                .withId(1L)
+                .withEmail(request.email())
+                .withPassword("hashed-password")
+                .withFullName("Test Citizen")
+                .withRole(Role.CITIZEN)
+                .build();
+
+        UserDetailsImpl userDetails = new UserDetailsImpl(user);
+
+        Authentication authentication =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
+                );
+
+        when(authenticationManager.authenticate(any()))
+                .thenReturn(authentication);
+
+        when(jwtService.generateToken(userDetails))
+                .thenReturn("test-jwt-token");
+
+        // when
+        LoginResponse response = authService.login(request);
+
+        // then
+        assertThat(response.accessToken())
+                .isEqualTo("test-jwt-token");
+
+        assertThat(response.tokenType())
+                .isEqualTo("Bearer");
+
+        assertThat(response.userId())
+                .isEqualTo(1L);
+
+        assertThat(response.email())
+                .isEqualTo("citizen@example.com");
+
+        assertThat(response.fullName())
+                .isEqualTo("Test Citizen");
+
+        assertThat(response.role())
+                .isEqualTo(Role.CITIZEN);
+
+        verify(jwtService).generateToken(userDetails);
+    }
+
+    @Test
+    void login_throwsException_whenCredentialsAreInvalid() {
+        // given
+        LoginRequest request = new LoginRequest(
+                "citizen@example.com",
+                "wrong-password"
+        );
+
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new BadCredentialsException("Bad credentials"));
+
+        // when / then
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(BadCredentialsException.class);
+
+        // A JWT must never be generated when authentication fails.
+        verify(jwtService, never()).generateToken(any());
+    }
+
 }

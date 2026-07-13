@@ -32,6 +32,8 @@ services:
       DB_USERNAME: root
       DB_PASSWORD: ${DB_PASSWORD:-root}
       SERVER_PORT: ${SERVER_PORT:-3100}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
     ports:
       - "${SERVER_PORT:-3100}:${SERVER_PORT:-3100}"
 
