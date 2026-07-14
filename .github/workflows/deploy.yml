@@ -23,8 +23,8 @@ jobs:
     runs-on: self-hosted
     env:
       APP_CONTAINER_NAME: fixmycity-app
-      APP_IMAGE_NAME: fixmycity-app
       COMPOSE_PROJECT_NAME: fixmycity
+      COMPOSE_BAKE: "false"
 
     steps:
       - name: Checkout code
@@ -58,17 +58,11 @@ jobs:
           if [ -z "$PORT_INPUT" ]; then
             PORT_INPUT="3100"
           fi
-          
+
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           echo "commit=$COMMIT" >> $GITHUB_OUTPUT
           echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
           echo "server_port=$PORT_INPUT" >> $GITHUB_OUTPUT
-          
-          echo "Deployment Info:"
-          echo "  Branch: $BRANCH"
-          echo "  Commit: $COMMIT"
-          echo "  Timestamp: $TIMESTAMP"
-          echo "  Port: $PORT_INPUT"
 
       - name: Build with Maven
         run: mvn clean package -DskipTests
@@ -90,8 +84,11 @@ jobs:
         continue-on-error: true
         run: docker compose down
 
+      - name: Resolve compose config
+        run: docker compose config > docker-compose.resolved.yml
+
       - name: Build and start stack
-        run: docker compose up -d --build
+        run: docker compose -f docker-compose.resolved.yml up -d --build
 
       - name: Verify deployment
         env:
@@ -100,22 +97,22 @@ jobs:
           for i in {1..30}; do
             if ! docker ps --format '{{.Names}}' | grep -qx "$APP_CONTAINER_NAME"; then
               echo "Application container is not running"
-              docker compose logs app || true
+              docker compose -f docker-compose.resolved.yml logs app || true
               exit 1
             fi
-          
+
             if docker logs $APP_CONTAINER_NAME 2>&1 | grep -qE "Started [A-Za-z]+ in"; then
               echo "Application container is running and Spring Boot has started"
               docker ps --filter "name=$APP_CONTAINER_NAME"
               exit 0
             fi
-          
+
             echo "Attempt $i: Waiting for Spring Boot startup confirmation..."
             sleep 2
           done
-          
+
           echo "Application did not report successful startup in logs"
-          docker compose logs app || true
+          docker compose -f docker-compose.resolved.yml logs app || true
           exit 1
 
       - name: Display application logs
