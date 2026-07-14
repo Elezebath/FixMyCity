@@ -36,7 +36,6 @@ import java.util.List;
         name = "Incident Management",
         description = "APIs for reporting and managing city incidents"
 )
-@SecurityRequirement(name = "bearerAuth")
 public class IncidentController {
 
     private final IncidentService incidentService;
@@ -122,6 +121,7 @@ public class IncidentController {
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
+    @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyRole('CITIZEN', 'MANAGER', 'ADMIN')")
     @Operation(
             summary = "Report a new incident",
