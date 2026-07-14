@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.*;
-import org.springframework.web.multipart.MultipartFile;
 
 
 @Getter
@@ -52,13 +51,4 @@ public class CreateIncidentRequest {
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private String locationAddress;
-
-    @NotNull(message = "Photo is required.")
-    @Schema(
-            description = "Incident image",
-            type = "string",
-            format = "binary",
-            requiredMode = Schema.RequiredMode.REQUIRED
-    )
-    private MultipartFile photo;
 }
