@@ -115,16 +115,6 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Returns 404 when a user is not found.
-     */
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleUserNotFound(UserNotFoundException ex) {
-        Map<String, String> body = new HashMap<>();
-        body.put(ERROR, ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body); // 404
-    }
-
-    /**
      * Returns 400 when an invalid incident status is provided.
      */
     @ExceptionHandler(InvalidStatusException.class)
