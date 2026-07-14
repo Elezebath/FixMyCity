@@ -73,6 +73,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // will be changed later
                         .requestMatchers(
+                                "/",
                                 "/ping",
                                 "/actuator/health",
                                 "/swagger-ui/**",
