@@ -2,9 +2,7 @@ package lv.acnbootcamp.fixmycity.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lv.acnbootcamp.fixmycity.entity.Role;
 
 // Incoming payload for user registration.
 // Kept separate from the User entity so we never expose/accept
@@ -20,8 +18,5 @@ public record RegisterRequest(
         String password,
 
         @NotBlank(message = "Full name is required")
-        String fullName,
-
-        @NotNull(message = "Role is required")
-        Role role
+        String fullName
 ) {}

@@ -90,9 +90,6 @@ jobs:
       - name: Build and start stack
         run: docker compose -f docker-compose.resolved.yml up -d --build
 
-      - name: Check running containers
-        run: docker ps -a | grep fixmycity
-
       - name: Verify deployment
         env:
           SERVER_PORT: ${{ steps.deployment-info.outputs.server_port }}
