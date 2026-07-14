@@ -11,8 +11,8 @@ import java.util.Optional;
 public interface IncidentRepository extends JpaRepository<Incident, Long> {
     List<Incident> findAllBySoftDeletedFalse();
     List<Incident> findAllBySoftDeletedFalseAndStatus(IncidentStatus status);
-    List<Incident> findAllBySoftDeletedFalseAndCategoryId(Long categoryId);
-    List<Incident> findAllBySoftDeletedFalseAndAssignedCompanyId(Long companyId);
+    List<Incident> findAllBySoftDeletedFalseAndCategory_CategoryId(Long categoryId);
+    List<Incident> findAllBySoftDeletedFalseAndAssignedCompany_CompanyId(Long companyId);
     List<Incident> findAllBySoftDeletedFalseAndCitizenId(Long citizenId);
     List<Incident> findAllBySoftDeletedFalseAndPriority(IncidentPriority priority);
     Optional<Incident> findByIncidentIdAndSoftDeletedFalse(Long id);

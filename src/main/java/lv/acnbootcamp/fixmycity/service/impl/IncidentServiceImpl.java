@@ -13,6 +13,7 @@ import lv.acnbootcamp.fixmycity.exception.*;
 import lv.acnbootcamp.fixmycity.mapper.IncidentMapper;
 import lv.acnbootcamp.fixmycity.repository.CategoryRepository;
 import lv.acnbootcamp.fixmycity.repository.IncidentRepository;
+import lv.acnbootcamp.fixmycity.service.IncidentService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -21,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
-public class IncidentServiceImpl {
+public class IncidentServiceImpl implements IncidentService {
 
     private final IncidentRepository incidentRepository;
     private final CategoryRepository categoryRepository;
@@ -80,7 +81,7 @@ public class IncidentServiceImpl {
         log.info("Fetching incidents for company {}", companyId);
 
         return incidentRepository
-                .findAllBySoftDeletedFalseAndAssignedCompanyId(companyId)
+                .findAllBySoftDeletedFalseAndAssignedCompany_CompanyId(companyId)
                 .stream()
                 .map(incidentMapper::toResponse)
                 .toList();
@@ -94,7 +95,7 @@ public class IncidentServiceImpl {
 
         log.info("Fetching incidents category {}", categoryId);
         return incidentRepository
-                .findAllBySoftDeletedFalseAndCategoryId(categoryId)
+                .findAllBySoftDeletedFalseAndCategory_CategoryId(categoryId)
                 .stream()
                 .map(incidentMapper::toResponse)
                 .toList();
