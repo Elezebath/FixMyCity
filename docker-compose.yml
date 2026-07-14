@@ -45,7 +45,7 @@ services:
     depends_on:
       - app
     ports:
-      - "5173:80"
+      - "3150:80"
 
   adminer:
     image: adminer

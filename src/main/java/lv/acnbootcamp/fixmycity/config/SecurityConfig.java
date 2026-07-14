@@ -4,6 +4,7 @@ import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -15,6 +16,11 @@ import org.springframework.security.config.annotation.authentication.configurati
 import lv.acnbootcamp.fixmycity.security.JwtAuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 /**
  * Central Spring Security configuration for FixMyCity.
@@ -23,11 +29,7 @@ import org.springframework.http.HttpStatus;
  *  - Defines which endpoints are public vs. require authentication/roles
  *  - Configures password hashing (BCrypt)
  *  - Configures session handling (stateless, REST-API style)
- *
- * NOTE: Until a User entity + UserDetailsService are implemented,
- * Spring Security falls back to its default in-memory user
- * (username "user", random password printed in the console logs on startup).
- * Once UserDetailsServiceImpl is added, authentication will be backed by the database.
+ *  - Configures CORS for the frontend origin
  */
 
 @Configuration
@@ -52,15 +54,34 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
+    /**
+     * CORS configuration allowing the frontend to call the API from a different origin/port.
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(
+                "http://localhost:3150"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) ->
-                                        response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized")))
+                                response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized")))
                 .authorizeHttpRequests(auth -> auth
                         // will be changed later
                         .requestMatchers(

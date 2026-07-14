@@ -72,7 +72,11 @@ function Login() {
             const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(registerForm),
+                body: JSON.stringify({
+                    fullName: `${registerForm.firstName} ${registerForm.lastName}`.trim(),
+                    email: registerForm.email,
+                    password: registerForm.password,
+                }),
             });
 
             if (!res.ok) {
