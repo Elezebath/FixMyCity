@@ -122,7 +122,7 @@ public class IncidentController {
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('CITIZEN', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasRole('CITIZEN')")
     @Operation(
             summary = "Report a new incident",
             description = "Creates a new incident with category, location and optional photo."
