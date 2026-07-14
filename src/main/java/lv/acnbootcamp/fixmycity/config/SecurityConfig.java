@@ -3,6 +3,7 @@ package lv.acnbootcamp.fixmycity.config;
 import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,6 +16,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import lv.acnbootcamp.fixmycity.security.JwtAuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Central Spring Security configuration for FixMyCity.
@@ -30,6 +32,7 @@ import org.springframework.http.HttpStatus;
  * Once UserDetailsServiceImpl is added, authentication will be backed by the database.
  */
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -54,13 +57,19 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        log.info("Initializing SecurityFilterChain");
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint((request, response, authException) ->
-                                        response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized")))
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            log.error("Authentication failed for {} {}: {}", 
+                                    request.getMethod(), 
+                                    request.getRequestURI(), 
+                                    authException.getMessage());
+                            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
+                        }))
                 .authorizeHttpRequests(auth -> auth
                         // will be changed later
                         .requestMatchers(
@@ -72,6 +81,10 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/login"
                         ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET
+                                ,"/api/incidents/")
+                        .permitAll()
                         .requestMatchers("/api/incidents/**").hasAnyRole("CITIZEN", "MANAGER", "ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

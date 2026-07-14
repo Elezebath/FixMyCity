@@ -28,8 +28,13 @@ public class IncidentMapper {
                 .title(incident.getTitle())
                 .description(incident.getDescription())
                 .locationAddress(incident.getLocationAddress())
+                .categoryId(incident.getCategory().getCategoryId())
                 .categoryName(
                         incident.getCategory() != null ? incident.getCategory().getName() : null
+                )
+                .citizenId(incident.getCitizen().getId())
+                .citizenName(
+                        incident.getCategory() != null ? incident.getCategory().getCategoryId() : null
                 )
                 .status(
                         incident.getStatus() != null ? incident.getStatus().name() : null

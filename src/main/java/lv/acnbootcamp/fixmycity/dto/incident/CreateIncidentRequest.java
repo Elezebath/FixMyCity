@@ -1,10 +1,7 @@
 package lv.acnbootcamp.fixmycity.dto.incident;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 
@@ -51,4 +48,14 @@ public class CreateIncidentRequest {
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private String locationAddress;
+
+    @NotNull(message = "Citizen ID is required.")
+    @Min(1)
+    @Positive(message = "Citizen ID must be positive.")
+    @Schema(
+            description = "ID of the citizen reporting the incident",
+            example = "42",
+            requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    private Long citizenId;
 }

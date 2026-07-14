@@ -20,6 +20,8 @@ import lv.acnbootcamp.fixmycity.service.IncidentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,12 +69,14 @@ public class IncidentController {
 
     @GetMapping("/status/{status}")
     @Operation(summary = "Get incidents by status")
+    @ApiResponse(responseCode = "200", description = "Incidents retrieved successfully")
     public List<IncidentResponse> findByStatus(@PathVariable IncidentStatus status) {
         return incidentService.findAllByStatus(status);
     }
 
     @GetMapping("/priority/{priority}")
     @Operation(summary = "Get incidents by priority")
+    @ApiResponse(responseCode = "200", description = "Incidents retrieved successfully")
     public List<IncidentResponse> findByPriority(
             @PathVariable IncidentPriority priority) {
 
@@ -81,8 +85,9 @@ public class IncidentController {
 
     @GetMapping("/citizen/{citizenId}")
     @Operation(summary = "Get incidents reported by citizen")
+    @ApiResponse(responseCode = "200", description = "Incidents retrieved successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid citizen ID")
     public List<IncidentResponse> findByCitizen(
-
             @PathVariable
             @Positive
             Long citizenId) {
@@ -92,8 +97,9 @@ public class IncidentController {
 
     @GetMapping("/company/{companyId}")
     @Operation(summary = "Get incidents assigned to company")
+    @ApiResponse(responseCode = "200", description = "Incidents retrieved successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid company ID")
     public List<IncidentResponse> findByCompany(
-
             @PathVariable
             @Positive
             Long companyId) {
@@ -103,8 +109,10 @@ public class IncidentController {
 
     @GetMapping("/category/{categoryId}")
     @Operation(summary = "Get incidents by category")
+    @ApiResponse(responseCode = "200", description = "Incidents retrieved successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid category ID")
+    @ApiResponse(responseCode = "404", description = "Category not found")
     public List<IncidentResponse> findByCategory(
-
             @PathVariable
             @Positive
             Long categoryId) {
@@ -112,15 +120,12 @@ public class IncidentController {
         return incidentService.findAllByCategory(categoryId);
     }
 
-    @PostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('CITIZEN')")
+    @PreAuthorize("hasAnyRole('CITIZEN', 'MANAGER', 'ADMIN')")
     @Operation(
             summary = "Report a new incident",
-            description = "Creates a new incident with category, location and photo."
+            description = "Creates a new incident with category, location and optional photo."
     )
     @ApiResponse(
             responseCode = "201",
@@ -150,7 +155,10 @@ public class IncidentController {
             description = "Internal Server Error"
     )
     public IncidentResponse create(@Valid @ModelAttribute CreateIncidentRequest request) {
-        log.info( "REST request to create incident with title '{}'",request.getTitle() );
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        log.info("REST request to create incident with title '{}', authenticated user: {}",
+                request.getTitle(), 
+                auth != null ? auth.getName() : "anonymous");
         return incidentService.create(request);
     }
 }

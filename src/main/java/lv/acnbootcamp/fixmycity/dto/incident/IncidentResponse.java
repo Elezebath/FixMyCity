@@ -28,6 +28,15 @@ public class IncidentResponse {
     @Schema(example = "Infrastructure")
     private String categoryName;
 
+    @Schema(example = "10")
+    private Long categoryId;
+
+    @Schema(example = "101")
+    private Long citizenId;
+
+    @Schema(example = "John Doe")
+    private Long citizenName;
+
     @Schema(example = "NEW")
     private String status;
 

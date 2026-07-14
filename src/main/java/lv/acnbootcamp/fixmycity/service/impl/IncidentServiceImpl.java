@@ -5,14 +5,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
-import lv.acnbootcamp.fixmycity.entity.Incident;
-import lv.acnbootcamp.fixmycity.entity.IncidentPriority;
-import lv.acnbootcamp.fixmycity.entity.IncidentStatus;
-import lv.acnbootcamp.fixmycity.entity.Category;
+import lv.acnbootcamp.fixmycity.entity.*;
 import lv.acnbootcamp.fixmycity.exception.*;
 import lv.acnbootcamp.fixmycity.mapper.IncidentMapper;
 import lv.acnbootcamp.fixmycity.repository.CategoryRepository;
 import lv.acnbootcamp.fixmycity.repository.IncidentRepository;
+import lv.acnbootcamp.fixmycity.repository.UserRepository;
 import lv.acnbootcamp.fixmycity.service.IncidentService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -27,6 +25,7 @@ public class IncidentServiceImpl implements IncidentService {
     private final IncidentRepository incidentRepository;
     private final CategoryRepository categoryRepository;
     private final IncidentMapper incidentMapper;
+    private final UserRepository userRepository;
 
     /**
      * Find all active incidents
@@ -45,7 +44,9 @@ public class IncidentServiceImpl implements IncidentService {
      * Find incidents by status
      */
     public List<IncidentResponse> findAllByStatus(IncidentStatus status) {
-        validateStatus(status);
+        if (status == null) {
+            throw new InvalidStatusException("Status cannot be null");
+        }
         log.info(
                 "Fetching incidents with status {}",
                 status
@@ -64,7 +65,10 @@ public class IncidentServiceImpl implements IncidentService {
     public List<IncidentResponse> findAllByCitizen(Long citizenId) {
 
         validateId(citizenId);
-        log.info("Fetching incidents for citizen {}", citizenId);
+        if (!userRepository.existsById(citizenId)) {
+            throw new UserNotFoundException("User not found with id: " + citizenId);
+        }
+        log.info("Fetching incidents for user {}", citizenId);
 
         return incidentRepository
                 .findAllBySoftDeletedFalseAndCitizenId(citizenId)
@@ -80,6 +84,10 @@ public class IncidentServiceImpl implements IncidentService {
         validateId(companyId);
         log.info("Fetching incidents for company {}", companyId);
 
+        if (!categoryRepository.existsById(companyId)) {
+            throw new CompanyNotFoundException("Company not found with id: " + companyId);
+        }
+
         return incidentRepository
                 .findAllBySoftDeletedFalseAndAssignedCompany_CompanyId(companyId)
                 .stream()
@@ -92,6 +100,11 @@ public class IncidentServiceImpl implements IncidentService {
      */
     public List<IncidentResponse> findAllByCategory(Long categoryId) {
         validateId(categoryId);
+
+        // Check if category exists
+        if (!categoryRepository.existsById(categoryId)) {
+            throw new CategoryNotFoundException("Category not found with id: " + categoryId);
+        }
 
         log.info("Fetching incidents category {}", categoryId);
         return incidentRepository
@@ -126,7 +139,8 @@ public class IncidentServiceImpl implements IncidentService {
 
         Incident incident = incidentRepository
                 .findByIncidentIdAndSoftDeletedFalse(id)
-                .orElseThrow(() -> new IncidentNotFoundException("Incident not found with id: " + id));
+                .orElseThrow(() -> new IncidentNotFoundException(
+                        "Incident not found with id: " + id));
 
         return incidentMapper.toResponse(incident);
     }
@@ -140,6 +154,10 @@ public class IncidentServiceImpl implements IncidentService {
 
         log.info("Creating new incident for category {}", request.getCategoryId());
 
+        User citizen = userRepository.findById(request.getCitizenId())
+                .orElseThrow(() -> new UserNotFoundException(
+                        "User not found with id: " + request.getCitizenId()));
+
         Category category = categoryRepository
                 .findById(request.getCategoryId())
                 .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
@@ -149,6 +167,7 @@ public class IncidentServiceImpl implements IncidentService {
                 .locationAddress(request.getLocationAddress())
                 .category(category)
                 .status(IncidentStatus.NEW)
+                .citizen(citizen)
                 .priority(IncidentPriority.MEDIUM)
                 .softDeleted(false)
                 .build();
@@ -169,9 +188,7 @@ public class IncidentServiceImpl implements IncidentService {
             throw new InvalidIncidentException("Title is required");
         }
 
-        if (!StringUtils.hasText(
-                request.getDescription())) {
-
+        if (!StringUtils.hasText(request.getDescription())) {
             throw new InvalidIncidentException("Description is required");
         }
 
@@ -184,12 +201,6 @@ public class IncidentServiceImpl implements IncidentService {
     private void validateId(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("Invalid id");
-        }
-    }
-
-    private void validateStatus(IncidentStatus status) {
-        if (status == null) {
-            throw new IllegalArgumentException("Status cannot be null");
         }
     }
 }
