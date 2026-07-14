@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
 const DEMO_ACCOUNTS = [
@@ -9,6 +10,7 @@ const DEMO_ACCOUNTS = [
 ];
 
 function Login() {
+    const navigate = useNavigate();
     const [mode, setMode] = useState('signin');
 
     const [email, setEmail] = useState('');
@@ -23,10 +25,40 @@ function Login() {
     });
     const [registerError, setRegisterError] = useState('');
 
-    const handleSubmit = (e) => {
+    const [loginError, setLoginError] = useState('');
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Login attempt:', { email, password });
-        // TODO: POST /api/auth/login
+        setLoginError('');
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => null);
+                throw new Error(err?.message || 'Invalid email or password');
+            }
+
+            const data = await res.json();
+
+            localStorage.setItem('token', data.accessToken);
+            localStorage.setItem('tokenType', data.tokenType);
+
+            localStorage.setItem('user', JSON.stringify({
+                userId: data.userId,
+                fullName: data.fullName,
+                email: data.email,
+                role: data.role,
+            }));
+
+            navigate('/app/dashboard');
+
+        } catch (err) {
+            setLoginError(err.message);
+        }
     };
 
     const handleRegisterChange = (e) => {
@@ -205,7 +237,6 @@ function Login() {
                             {registerError && <p className="login-error">{registerError}</p>}
 
                             <button type="submit" className="login-submit">
-                                Create account
                                 Create account
                             </button>
                         </form>
