@@ -1,6 +1,5 @@
 package lv.acnbootcamp.fixmycity.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lv.acnbootcamp.fixmycity.security.JwtService;
 import lv.acnbootcamp.fixmycity.config.SecurityConfig;
 import lv.acnbootcamp.fixmycity.dto.UserResponse;
