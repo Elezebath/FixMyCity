@@ -6,7 +6,7 @@ import lv.acnbootcamp.fixmycity.dto.user.UpdateUserRoleRequest;
 import lv.acnbootcamp.fixmycity.dto.user.UpdateUserStatusRequest;
 import lv.acnbootcamp.fixmycity.dto.user.UserAdminResponse;
 import lv.acnbootcamp.fixmycity.entity.Role;
-import lv.acnbootcamp.fixmycity.exception.UserNotFoundException;
+import lv.acnbootcamp.fixmycity.exception.user.UserNotFoundException;
 import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import lv.acnbootcamp.fixmycity.service.UserService;
 import org.junit.jupiter.api.Nested;
@@ -20,7 +20,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import lv.acnbootcamp.fixmycity.dto.user.CreateUserByAdminRequest;
 import lv.acnbootcamp.fixmycity.dto.user.UpdateUserProfileRequest;
-import lv.acnbootcamp.fixmycity.exception.EmailAlreadyExistsException;
+import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
 
 import java.time.LocalDateTime;
 import java.util.List;

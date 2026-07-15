@@ -4,7 +4,7 @@ import lv.acnbootcamp.fixmycity.security.JwtService;
 import lv.acnbootcamp.fixmycity.config.SecurityConfig;
 import lv.acnbootcamp.fixmycity.dto.user.UserResponse;
 import lv.acnbootcamp.fixmycity.entity.Role;
-import lv.acnbootcamp.fixmycity.exception.EmailAlreadyExistsException;
+import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import lv.acnbootcamp.fixmycity.service.AuthService;
 import org.junit.jupiter.api.Test;

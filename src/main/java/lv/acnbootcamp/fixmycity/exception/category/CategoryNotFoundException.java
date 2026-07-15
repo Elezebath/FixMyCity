@@ -1,4 +1,4 @@
-package lv.acnbootcamp.fixmycity.exception;
+package lv.acnbootcamp.fixmycity.exception.category;
 
 public class CategoryNotFoundException extends RuntimeException {
     public CategoryNotFoundException(String message) {
