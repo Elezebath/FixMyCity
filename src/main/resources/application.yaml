@@ -16,6 +16,20 @@ spring:
       hibernate:
         format_sql: true
     database-platform: org.hibernate.dialect.MySQLDialect
+  mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: smtp.gmail.com
 
 springdoc:
   api-docs:
@@ -36,3 +50,7 @@ jwt:
 
 password-reset:
   expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:30}
+  frontend-url: ${FRONTEND_RESET_PASSWORD_URL:http://localhost:3150/reset-password}
+
+email:
+  from: ${SMTP_FROM}
