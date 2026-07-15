@@ -16,4 +16,5 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
     List<Incident> findAllBySoftDeletedFalseAndCitizenId(Long citizenId);
     List<Incident> findAllBySoftDeletedFalseAndPriority(IncidentPriority priority);
     Optional<Incident> findByIncidentIdAndSoftDeletedFalse(Long id);
+    boolean existsBySoftDeletedFalseAndCategory_CategoryId(Long categoryId);
 }

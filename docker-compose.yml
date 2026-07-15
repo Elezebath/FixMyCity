@@ -44,6 +44,18 @@ services:
     ports:
       - "${SERVER_PORT:-3100}:${SERVER_PORT:-3100}"
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:${SERVER_PORT:-3100}
+    container_name: fixmycity-frontend
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "3150:80"
+
   adminer:
     image: adminer
     restart: unless-stopped

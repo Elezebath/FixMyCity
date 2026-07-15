@@ -2,9 +2,9 @@ package lv.acnbootcamp.fixmycity.controller;
 
 import lv.acnbootcamp.fixmycity.security.JwtService;
 import lv.acnbootcamp.fixmycity.config.SecurityConfig;
-import lv.acnbootcamp.fixmycity.dto.UserResponse;
+import lv.acnbootcamp.fixmycity.dto.user.UserResponse;
 import lv.acnbootcamp.fixmycity.entity.Role;
-import lv.acnbootcamp.fixmycity.exception.EmailAlreadyExistsException;
+import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import lv.acnbootcamp.fixmycity.service.AuthService;
 import lv.acnbootcamp.fixmycity.service.PasswordRecoveryService;
@@ -14,8 +14,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import lv.acnbootcamp.fixmycity.dto.LoginRequest;
-import lv.acnbootcamp.fixmycity.dto.LoginResponse;
+import lv.acnbootcamp.fixmycity.dto.auth.LoginRequest;
+import lv.acnbootcamp.fixmycity.dto.auth.LoginResponse;
 import org.springframework.http.MediaType;
 
 import static org.mockito.Mockito.verify;

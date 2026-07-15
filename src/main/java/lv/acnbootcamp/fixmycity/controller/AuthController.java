@@ -1,7 +1,8 @@
 package lv.acnbootcamp.fixmycity.controller;
 
 import jakarta.validation.Valid;
-import lv.acnbootcamp.fixmycity.dto.*;
+import lv.acnbootcamp.fixmycity.dto.auth.RegisterRequest;
+import lv.acnbootcamp.fixmycity.dto.user.UserResponse;
 import lv.acnbootcamp.fixmycity.service.AuthService;
 import lv.acnbootcamp.fixmycity.service.PasswordRecoveryService;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import lv.acnbootcamp.fixmycity.dto.auth.LoginRequest;
+import lv.acnbootcamp.fixmycity.dto.auth.LoginResponse;
 
 @RestController
 @RequestMapping("/api/auth")
