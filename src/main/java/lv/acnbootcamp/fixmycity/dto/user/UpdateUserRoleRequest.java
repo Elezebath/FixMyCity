@@ -1,4 +1,4 @@
-package lv.acnbootcamp.fixmycity.dto;
+package lv.acnbootcamp.fixmycity.dto.user;
 
 import jakarta.validation.constraints.NotNull;
 import lv.acnbootcamp.fixmycity.entity.Role;

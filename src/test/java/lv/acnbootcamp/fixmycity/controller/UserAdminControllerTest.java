@@ -2,9 +2,9 @@ package lv.acnbootcamp.fixmycity.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lv.acnbootcamp.fixmycity.config.SecurityConfig;
-import lv.acnbootcamp.fixmycity.dto.UpdateUserRoleRequest;
-import lv.acnbootcamp.fixmycity.dto.UpdateUserStatusRequest;
-import lv.acnbootcamp.fixmycity.dto.UserAdminResponse;
+import lv.acnbootcamp.fixmycity.dto.user.UpdateUserRoleRequest;
+import lv.acnbootcamp.fixmycity.dto.user.UpdateUserStatusRequest;
+import lv.acnbootcamp.fixmycity.dto.user.UserAdminResponse;
 import lv.acnbootcamp.fixmycity.entity.Role;
 import lv.acnbootcamp.fixmycity.exception.UserNotFoundException;
 import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
@@ -18,8 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import lv.acnbootcamp.fixmycity.dto.CreateUserByAdminRequest;
-import lv.acnbootcamp.fixmycity.dto.UpdateUserProfileRequest;
+import lv.acnbootcamp.fixmycity.dto.user.CreateUserByAdminRequest;
+import lv.acnbootcamp.fixmycity.dto.user.UpdateUserProfileRequest;
 import lv.acnbootcamp.fixmycity.exception.EmailAlreadyExistsException;
 
 import java.time.LocalDateTime;

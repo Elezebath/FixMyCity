@@ -1,6 +1,6 @@
 package lv.acnbootcamp.fixmycity.service;
 
-import lv.acnbootcamp.fixmycity.dto.UserAdminResponse;
+import lv.acnbootcamp.fixmycity.dto.user.UserAdminResponse;
 import lv.acnbootcamp.fixmycity.entity.Role;
 import lv.acnbootcamp.fixmycity.entity.User;
 import lv.acnbootcamp.fixmycity.exception.EmailAlreadyExistsException;
