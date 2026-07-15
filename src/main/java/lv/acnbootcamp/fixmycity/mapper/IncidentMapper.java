@@ -34,7 +34,7 @@ public class IncidentMapper {
                 )
                 .citizenId(incident.getCitizen().getId())
                 .citizenName(
-                        incident.getCategory() != null ? incident.getCategory().getCategoryId() : null
+                        incident.getCategory() != null ? incident.getCategory().getName() : null
                 )
                 .status(
                         incident.getStatus() != null ? incident.getStatus().name() : null
