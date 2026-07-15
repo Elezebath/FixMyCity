@@ -9,6 +9,7 @@ import lv.acnbootcamp.fixmycity.entity.*;
 import lv.acnbootcamp.fixmycity.exception.*;
 import lv.acnbootcamp.fixmycity.mapper.IncidentMapper;
 import lv.acnbootcamp.fixmycity.repository.CategoryRepository;
+import lv.acnbootcamp.fixmycity.repository.CompanyRepository;
 import lv.acnbootcamp.fixmycity.repository.IncidentRepository;
 import lv.acnbootcamp.fixmycity.repository.UserRepository;
 import lv.acnbootcamp.fixmycity.service.IncidentService;
@@ -26,6 +27,7 @@ public class IncidentServiceImpl implements IncidentService {
     private final CategoryRepository categoryRepository;
     private final IncidentMapper incidentMapper;
     private final UserRepository userRepository;
+    private final CompanyRepository companyRepository;
 
     /**
      * Find all active incidents
@@ -84,7 +86,7 @@ public class IncidentServiceImpl implements IncidentService {
         validateId(companyId);
         log.info("Fetching incidents for company {}", companyId);
 
-        if (!categoryRepository.existsById(companyId)) {
+        if (!companyRepository.existsById(companyId)) {
             throw new CompanyNotFoundException("Company not found with id: " + companyId);
         }
 
