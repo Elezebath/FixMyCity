@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 // Represents an application user stored in the database.
 // Used both as the JPA entity and as the source of truth for
@@ -40,6 +42,7 @@ public class User {
     private Role role;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean enabled = true;
 
     @Column(updatable = false)
@@ -49,4 +52,23 @@ public class User {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
+    @OneToOne(mappedBy = "user")
+    private Company company;
+
+    @OneToMany(mappedBy = "citizen")
+    @Builder.Default
+    private List<Incident> reportedIncidents = new ArrayList<>();
+
+    @OneToMany(mappedBy = "assignedBy")
+    @Builder.Default
+    private List<IncidentAssignment> createdAssignments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "changedBy")
+    @Builder.Default
+    private List<IncidentStatusHistory> statusChanges = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    @Builder.Default
+    private List<Comment> comments = new ArrayList<>();
 }
