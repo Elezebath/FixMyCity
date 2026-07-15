@@ -7,9 +7,13 @@ import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.entity.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.IncidentStatus;
 import lv.acnbootcamp.fixmycity.exception.*;
+import lv.acnbootcamp.fixmycity.repository.UserRepository;
 import lv.acnbootcamp.fixmycity.security.JwtService;
+import lv.acnbootcamp.fixmycity.entity.Role;
+import lv.acnbootcamp.fixmycity.entity.User;
 import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import lv.acnbootcamp.fixmycity.service.IncidentService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,10 +45,24 @@ class IncidentControllerTest {
     private IncidentService incidentService;
 
     @MockitoBean
+    private UserRepository userRepository;
+
+    @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
 
     @MockitoBean
     private JwtService jwtService;
+
+    private User testCitizen;
+
+    @BeforeEach
+    void setUp() {
+        testCitizen = User.builder()
+                .id(10L)
+                .email("testuser@test.com")
+                .role(Role.CITIZEN)
+                .build();
+    }
 
     private IncidentResponse createResponse(Long id) {
         return IncidentResponse.builder()
@@ -452,10 +470,15 @@ class IncidentControllerTest {
     @DisplayName("POST /api/incidents - Create Incident Tests")
     class CreateIncidentTests {
 
+        private void setupUserMock(String email, User user) {
+            when(userRepository.findByEmail(email)).thenReturn(java.util.Optional.ofNullable(user));
+        }
+
         @Test
         @DisplayName("Should create incident without attachment")
         void shouldCreateIncidentWithoutAttachment() throws Exception {
-            when(incidentService.create(any(CreateIncidentRequest.class)))
+            setupUserMock("testuser@test.com", testCitizen);
+            when(incidentService.create(any(CreateIncidentRequest.class), eq(10L)))
                     .thenReturn(createResponse(100L));
 
             mockMvc.perform(multipart("/api/incidents")
@@ -463,12 +486,11 @@ class IncidentControllerTest {
                             .param("title", "Broken Street Light")
                             .param("description", "The street light is not working")
                             .param("locationAddress", "Brivibas Street 12, Riga")
-                            .param("citizenId", "10")
                             .with(user("testuser").roles("CITIZEN")))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.incidentId").value(100));
 
-            verify(incidentService).create(any(CreateIncidentRequest.class));
+            verify(incidentService).create(any(CreateIncidentRequest.class), eq(10L));
         }
 
         @Test
@@ -481,7 +503,8 @@ class IncidentControllerTest {
                     "fake image content".getBytes()
             );
 
-            when(incidentService.create(any(CreateIncidentRequest.class)))
+            setupUserMock("testuser@test.com", testCitizen);
+            when(incidentService.create(any(CreateIncidentRequest.class), eq(10L)))
                     .thenReturn(createResponseWithAttachment(100L));
 
             mockMvc.perform(multipart("/api/incidents")
@@ -489,7 +512,6 @@ class IncidentControllerTest {
                             .param("title", "Broken Street Light")
                             .param("description", "The street light is not working")
                             .param("locationAddress", "Brivibas Street 12, Riga")
-                            .param("citizenId", "10")
                             .file(attachmentFile)
                             .with(user("testuser").roles("CITIZEN")))
                     .andExpect(status().isCreated())
@@ -497,17 +519,18 @@ class IncidentControllerTest {
                     .andExpect(jsonPath("$.attachment").exists())
                     .andExpect(jsonPath("$.attachment.fileName").value("test.jpg"));
 
-            verify(incidentService).create(any(CreateIncidentRequest.class));
+            verify(incidentService).create(any(CreateIncidentRequest.class), eq(10L));
         }
 
         @Test
         @DisplayName("Should return 400 when title is missing")
         void shouldReturn400WhenTitleMissing() throws Exception {
+            setupUserMock("testuser@test.com", testCitizen);
+
             mockMvc.perform(multipart("/api/incidents")
                             .param("categoryId", "1")
                             .param("description", "Description")
                             .param("locationAddress", "Address")
-                            .param("citizenId", "10")
                             .with(user("testuser").roles("CITIZEN")))
                     .andExpect(status().isBadRequest());
 
@@ -517,12 +540,12 @@ class IncidentControllerTest {
         @Test
         @DisplayName("Should return 400 when description is missing")
         void shouldReturn400WhenDescriptionMissing() throws Exception {
+            setupUserMock("testuser@test.com", testCitizen);
 
             mockMvc.perform(multipart("/api/incidents")
                             .param("categoryId", "1")
                             .param("title", "Title")
                             .param("locationAddress", "Address")
-                            .param("citizenId", "10")
                             .with(user("testuser").roles("CITIZEN")))
                     .andExpect(status().isBadRequest());
 
@@ -532,12 +555,12 @@ class IncidentControllerTest {
         @Test
         @DisplayName("Should return 400 when category is missing")
         void shouldReturn400WhenCategoryMissing() throws Exception {
+            setupUserMock("testuser@test.com", testCitizen);
 
             mockMvc.perform(multipart("/api/incidents")
                             .param("title", "Title")
                             .param("description", "Description")
                             .param("locationAddress", "Address")
-                            .param("citizenId", "10")
                             .with(user("testuser").roles("CITIZEN")))
                     .andExpect(status().isBadRequest());
 
@@ -547,12 +570,13 @@ class IncidentControllerTest {
         @Test
         @DisplayName("Should return 400 when title is too short")
         void shouldReturn400WhenTitleTooShort() throws Exception {
+            setupUserMock("testuser@test.com", testCitizen);
+
             mockMvc.perform(multipart("/api/incidents")
                             .file(new MockMultipartFile("categoryId", "", "text/plain", "1".getBytes()))
                             .file(new MockMultipartFile("title", "", "text/plain", "Hi".getBytes()))
                             .file(new MockMultipartFile("description", "", "text/plain", "Description".getBytes()))
                             .file(new MockMultipartFile("locationAddress", "", "text/plain", "Address".getBytes()))
-                            .file(new MockMultipartFile("citizenId", "", "text/plain", "10".getBytes()))
                             .with(user("testuser").roles("CITIZEN")))
                     .andExpect(status().isBadRequest());
 
@@ -562,13 +586,14 @@ class IncidentControllerTest {
         @Test
         @DisplayName("Should return 400 when title is too long")
         void shouldReturn400WhenTitleTooLong() throws Exception {
+            setupUserMock("testuser@test.com", testCitizen);
+
             String longTitle = "A".repeat(151);
             mockMvc.perform(multipart("/api/incidents")
                             .file(new MockMultipartFile("categoryId", "", "text/plain", "1".getBytes()))
                             .file(new MockMultipartFile("title", "", "text/plain", longTitle.getBytes()))
                             .file(new MockMultipartFile("description", "", "text/plain", "Description".getBytes()))
                             .file(new MockMultipartFile("locationAddress", "", "text/plain", "Address".getBytes()))
-                            .file(new MockMultipartFile("citizenId", "", "text/plain", "10".getBytes()))
                             .with(user("testuser").roles("CITIZEN")))
                     .andExpect(status().isBadRequest());
 
@@ -578,12 +603,13 @@ class IncidentControllerTest {
         @Test
         @DisplayName("Should return 400 when description is too short")
         void shouldReturn400WhenDescriptionTooShort() throws Exception {
+            setupUserMock("testuser@test.com", testCitizen);
+
             mockMvc.perform(multipart("/api/incidents")
                             .file(new MockMultipartFile("categoryId", "", "text/plain", "1".getBytes()))
                             .file(new MockMultipartFile("title", "", "text/plain", "Title".getBytes()))
                             .file(new MockMultipartFile("description", "", "text/plain", "Short".getBytes()))
                             .file(new MockMultipartFile("locationAddress", "", "text/plain", "Address".getBytes()))
-                            .file(new MockMultipartFile("citizenId", "", "text/plain", "10".getBytes()))
                             .with(user("testuser").roles("CITIZEN")))
                     .andExpect(status().isBadRequest());
 
@@ -597,8 +623,7 @@ class IncidentControllerTest {
                             .file(new MockMultipartFile("categoryId", "", "text/plain", "1".getBytes()))
                             .file(new MockMultipartFile("title", "", "text/plain", "Title".getBytes()))
                             .file(new MockMultipartFile("description", "", "text/plain", "Description".getBytes()))
-                            .file(new MockMultipartFile("locationAddress", "", "text/plain", "Address".getBytes()))
-                            .file(new MockMultipartFile("citizenId", "", "text/plain", "10".getBytes())))
+                            .file(new MockMultipartFile("locationAddress", "", "text/plain", "Address".getBytes())))
                     .andExpect(status().isUnauthorized());
 
             verifyNoInteractions(incidentService);
@@ -612,7 +637,6 @@ class IncidentControllerTest {
                             .file(new MockMultipartFile("title", "", "text/plain", "Title".getBytes()))
                             .file(new MockMultipartFile("description", "", "text/plain", "Description".getBytes()))
                             .file(new MockMultipartFile("locationAddress", "", "text/plain", "Address".getBytes()))
-                            .file(new MockMultipartFile("citizenId", "", "text/plain", "10".getBytes()))
                             .with(user("testuser").roles("VIEWER")))
                     .andExpect(status().isForbidden());
 
@@ -622,7 +646,13 @@ class IncidentControllerTest {
         @Test
         @DisplayName("Should create incident with CITIZEN role")
         void shouldCreateIncidentWithCitizenRole() throws Exception {
-            when(incidentService.create(any(CreateIncidentRequest.class)))
+            User citizenUser = User.builder()
+                    .id(10L)
+                    .email("citizen@test.com")
+                    .role(Role.CITIZEN)
+                    .build();
+            setupUserMock("citizen@test.com", citizenUser);
+            when(incidentService.create(any(CreateIncidentRequest.class), eq(10L)))
                     .thenReturn(createResponse(100L));
 
             mockMvc.perform(multipart("/api/incidents")
@@ -630,53 +660,59 @@ class IncidentControllerTest {
                             .param("title", "Title")
                             .param("description", "Description")
                             .param("locationAddress", "Address")
-                            .param("citizenId", "10")
                             .with(user("citizen").roles("CITIZEN")))
                     .andExpect(status().isCreated());
 
-            verify(incidentService).create(any(CreateIncidentRequest.class));
+            verify(incidentService).create(any(CreateIncidentRequest.class), eq(10L));
         }
 
         @Test
-        @DisplayName("Should create incident with ADMIN role")
-        void shouldCreateIncidentWithAdminRole() throws Exception {
-            when(incidentService.create(any(CreateIncidentRequest.class)))
-                    .thenReturn(createResponse(100L));
+        @DisplayName("Should return 401 when ADMIN tries to create incident (not a citizen)")
+        void shouldReturn401WhenAdminTriesToCreateIncident() throws Exception {
+            User adminUser = User.builder()
+                    .id(1L)
+                    .email("admin@test.com")
+                    .role(Role.ADMIN)
+                    .build();
+            setupUserMock("admin@test.com", adminUser);
 
             mockMvc.perform(multipart("/api/incidents")
                             .param("categoryId", "1")
                             .param("title", "Title")
                             .param("description", "Description")
                             .param("locationAddress", "Address")
-                            .param("citizenId", "10")
                             .with(user("admin").roles("ADMIN")))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().isUnauthorized());
 
-            verify(incidentService).create(any(CreateIncidentRequest.class));
+            verifyNoInteractions(incidentService);
         }
 
         @Test
-        @DisplayName("Should create incident with MANAGER role")
-        void shouldCreateIncidentWithManagerRole() throws Exception {
-            when(incidentService.create(any(CreateIncidentRequest.class)))
-                    .thenReturn(createResponse(100L));
+        @DisplayName("Should return 401 when MANAGER tries to create incident (not a citizen)")
+        void shouldReturn401WhenManagerTriesToCreateIncident() throws Exception {
+            User managerUser = User.builder()
+                    .id(2L)
+                    .email("manager@test.com")
+                    .role(Role.MANAGER)
+                    .build();
+            setupUserMock("manager@test.com", managerUser);
 
             mockMvc.perform(multipart("/api/incidents")
                             .param("categoryId", "1")
                             .param("title", "Title")
                             .param("description", "Description")
                             .param("locationAddress", "Address")
-                            .param("citizenId", "10")
                             .with(user("manager").roles("MANAGER")))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().isUnauthorized());
 
-            verify(incidentService).create(any(CreateIncidentRequest.class));
+            verifyNoInteractions(incidentService);
         }
 
         @Test
         @DisplayName("Should return 404 when category not found")
         void shouldReturn404WhenCategoryNotFound() throws Exception {
-            when(incidentService.create(any(CreateIncidentRequest.class)))
+            setupUserMock("testuser@test.com", testCitizen);
+            when(incidentService.create(any(CreateIncidentRequest.class), eq(10L)))
                     .thenThrow(new CategoryNotFoundException("Category not found"));
 
             mockMvc.perform(multipart("/api/incidents")
@@ -684,53 +720,22 @@ class IncidentControllerTest {
                             .param("title", "Title")
                             .param("description", "Description")
                             .param("locationAddress", "Address")
-                            .param("citizenId", "10")
                             .with(user("testuser").roles("CITIZEN")))
                     .andExpect(status().isNotFound());
         }
 
         @Test
-        @DisplayName("Should return 404 when citizen not found")
-        void shouldReturn404WhenCitizenNotFound() throws Exception {
-            when(incidentService.create(any(CreateIncidentRequest.class)))
-                    .thenThrow(new UserNotFoundException("User not found"));
+        @DisplayName("Should return 404 when user not found in database")
+        void shouldReturn404WhenUserNotFoundInDatabase() throws Exception {
+            when(userRepository.findByEmail("unknown@test.com")).thenReturn(java.util.Optional.empty());
 
             mockMvc.perform(multipart("/api/incidents")
                             .param("categoryId", "1")
                             .param("title", "Title")
                             .param("description", "Description")
                             .param("locationAddress", "Address")
-                            .param("citizenId", "999")
-                            .with(user("testuser").roles("CITIZEN")))
-                    .andExpect(status().isNotFound());
-        }
-
-        @Test
-        @DisplayName("Should return 400 when citizenId is zero")
-        void shouldReturn400WhenCitizenIdZero() throws Exception {
-            mockMvc.perform(multipart("/api/incidents")
-                            .file(new MockMultipartFile("categoryId", "", "text/plain", "1".getBytes()))
-                            .file(new MockMultipartFile("title", "", "text/plain", "Title".getBytes()))
-                            .file(new MockMultipartFile("description", "", "text/plain", "Description".getBytes()))
-                            .file(new MockMultipartFile("locationAddress", "", "text/plain", "Address".getBytes()))
-                            .file(new MockMultipartFile("citizenId", "", "text/plain", "0".getBytes()))
-                            .with(user("testuser").roles("CITIZEN")))
-                    .andExpect(status().isBadRequest());
-
-            verifyNoInteractions(incidentService);
-        }
-
-        @Test
-        @DisplayName("Should return 400 when citizenId is negative")
-        void shouldReturn400WhenCitizenIdNegative() throws Exception {
-            mockMvc.perform(multipart("/api/incidents")
-                            .file(new MockMultipartFile("categoryId", "", "text/plain", "1".getBytes()))
-                            .file(new MockMultipartFile("title", "", "text/plain", "Title".getBytes()))
-                            .file(new MockMultipartFile("description", "", "text/plain", "Description".getBytes()))
-                            .file(new MockMultipartFile("locationAddress", "", "text/plain", "Address".getBytes()))
-                            .file(new MockMultipartFile("citizenId", "", "text/plain", "-1".getBytes()))
-                            .with(user("testuser").roles("CITIZEN")))
-                    .andExpect(status().isBadRequest());
+                            .with(user("unknown").roles("CITIZEN")))
+                    .andExpect(status().isUnauthorized());
 
             verifyNoInteractions(incidentService);
         }

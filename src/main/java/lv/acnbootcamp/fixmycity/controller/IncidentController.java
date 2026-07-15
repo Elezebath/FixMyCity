@@ -16,6 +16,10 @@ import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.entity.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.IncidentStatus;
+import lv.acnbootcamp.fixmycity.entity.Role;
+import lv.acnbootcamp.fixmycity.entity.User;
+import lv.acnbootcamp.fixmycity.exception.UnauthorizedException;
+import lv.acnbootcamp.fixmycity.repository.UserRepository;
 import lv.acnbootcamp.fixmycity.service.IncidentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,6 +44,7 @@ import java.util.List;
 public class IncidentController {
 
     private final IncidentService incidentService;
+    private final UserRepository userRepository;
 
     @GetMapping
     @Operation(
@@ -172,6 +177,16 @@ public class IncidentController {
                 request.getTitle(),
                 authentication.getName());
 
-        return incidentService.create(request);
+        // Resolve citizen ID from authenticated user
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("User not found with email: " + email));
+
+        // Validate that the user has CITIZEN role (only citizens can create incidents)
+        if (user.getRole() != Role.CITIZEN) {
+            throw new UnauthorizedException("Only citizens can create incidents");
+        }
+
+        return incidentService.create(request, user.getId());
     }
 }

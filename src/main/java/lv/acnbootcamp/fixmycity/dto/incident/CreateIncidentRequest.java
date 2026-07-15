@@ -50,16 +50,6 @@ public class CreateIncidentRequest {
     )
     private String locationAddress;
 
-    @NotNull(message = "Citizen ID is required.")
-    @Min(1)
-    @Positive(message = "Citizen ID must be positive.")
-    @Schema(
-            description = "ID of the citizen reporting the incident",
-            example = "42",
-            requiredMode = Schema.RequiredMode.REQUIRED
-    )
-    private Long citizenId;
-
     @Schema(
             description = "Optional attachment file (image or PDF, max 5MB). Can be omitted.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,

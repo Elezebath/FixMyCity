@@ -207,4 +207,14 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(body);
     }
+
+    /**
+     * Returns 401 when user is unauthorized (e.g., non-citizen trying to create incident).
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, String>> handleUnauthorized(UnauthorizedException ex) {
+        Map<String, String> body = new HashMap<>();
+        body.put(ERROR, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body); // 401
+    }
 }

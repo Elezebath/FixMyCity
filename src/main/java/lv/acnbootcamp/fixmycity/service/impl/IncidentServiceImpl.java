@@ -153,16 +153,17 @@ public class IncidentServiceImpl implements IncidentService {
     /**
      * Create new incident
      */
+    @Override
     @Transactional
-    public IncidentResponse create(CreateIncidentRequest request) {
+    public IncidentResponse create(CreateIncidentRequest request, Long citizenId) {
         validateRequest(request);
 
-        log.info("Creating new incident for category {}", request.getCategoryId());
+        log.info("Creating new incident for category {} by citizen {}", request.getCategoryId(), citizenId);
 
         // Find the citizen
-        User citizen = userRepository.findById(request.getCitizenId())
+        User citizen = userRepository.findById(citizenId)
                 .orElseThrow(() -> new UserNotFoundException(
-                        "User not found with id: " + request.getCitizenId()));
+                        "User not found with id: " + citizenId));
 
         // Find the category
         Category category = categoryRepository

@@ -223,21 +223,22 @@ class IncidentServiceImplTest {
     // =====================================================
     // CREATE INCIDENT
     // =====================================================
-    //
-    // @Test
+
+    @Test
     void create_shouldCreateIncidentSuccessfully() {
         CreateIncidentRequest request = new CreateIncidentRequest();
         request.setTitle("Broken road");
         request.setDescription("Large hole");
         request.setCategoryId(1L);
-        request.setCitizenId(1L);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(citizen));
+        Long citizenId = 1L;
+
+        when(userRepository.findById(citizenId)).thenReturn(Optional.of(citizen));
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
         when(incidentRepository.save(any())).thenReturn(incident);
         when(incidentMapper.toResponse(incident)).thenReturn(response);
 
-        IncidentResponse result = incidentService.create(request);
+        IncidentResponse result = incidentService.create(request, citizenId);
         assertThat(result).isEqualTo(response);
         verify(incidentRepository)
                 .save(any(Incident.class));
@@ -246,7 +247,7 @@ class IncidentServiceImplTest {
 
     @Test
     void create_shouldThrowException_whenRequestNull() {
-        assertThatThrownBy(() -> incidentService.create(null))
+        assertThatThrownBy(() -> incidentService.create(null, 1L))
                 .isInstanceOf(InvalidIncidentException.class);
 
     }
@@ -257,7 +258,7 @@ class IncidentServiceImplTest {
         request.setDescription("Description");
 
         request.setCategoryId(1L);
-        assertThatThrownBy(() -> incidentService.create(request))
+        assertThatThrownBy(() -> incidentService.create(request, 1L))
                 .isInstanceOf(InvalidIncidentException.class);
 
     }
@@ -268,11 +269,12 @@ class IncidentServiceImplTest {
         request.setTitle("Title");
         request.setDescription("Description");
         request.setCategoryId(1L);
-        request.setCitizenId(1L);
-        when(userRepository.findById(1L))
+
+        Long citizenId = 1L;
+        when(userRepository.findById(citizenId))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> incidentService.create(request))
+        assertThatThrownBy(() -> incidentService.create(request, citizenId))
                 .isInstanceOf(UserNotFoundException.class);
 
     }
@@ -283,14 +285,15 @@ class IncidentServiceImplTest {
         request.setTitle("Title");
         request.setDescription("Description");
         request.setCategoryId(1L);
-        request.setCitizenId(1L);
 
-        when(userRepository.findById(1L))
+        Long citizenId = 1L;
+
+        when(userRepository.findById(citizenId))
                 .thenReturn(Optional.of(citizen));
         when(categoryRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> incidentService.create(request))
+        assertThatThrownBy(() -> incidentService.create(request, citizenId))
                 .isInstanceOf(CategoryNotFoundException.class);
 
     }

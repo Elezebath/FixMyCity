@@ -10,7 +10,7 @@ import java.util.List;
 public interface IncidentService {
     List<IncidentResponse> findAll();
     IncidentResponse findById(Long id);
-    IncidentResponse create(CreateIncidentRequest request);
+    IncidentResponse create(CreateIncidentRequest request, Long citizenId);
     List<IncidentResponse> findAllByPriority(IncidentPriority priority);
     List<IncidentResponse> findAllByCategory(Long categoryId);
     List<IncidentResponse> findAllByCompany(Long companyId);
