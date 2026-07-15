@@ -1,6 +1,17 @@
 package lv.acnbootcamp.fixmycity.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import lv.acnbootcamp.fixmycity.exception.category.CategoryAlreadyExistsException;
+import lv.acnbootcamp.fixmycity.exception.category.CategoryInUseException;
+import lv.acnbootcamp.fixmycity.exception.incident.IncidentNotFoundException;
+import lv.acnbootcamp.fixmycity.exception.incident.InvalidIncidentException;
+import lv.acnbootcamp.fixmycity.exception.incident.InvalidPriorityException;
+import lv.acnbootcamp.fixmycity.exception.incident.InvalidStatusException;
+import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
+import lv.acnbootcamp.fixmycity.exception.user.CompanyNotFoundException;
+import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
+import lv.acnbootcamp.fixmycity.exception.user.UserNotFoundException;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -143,6 +154,26 @@ public class GlobalExceptionHandler {
         body.put(ERROR, "Malformed request body");
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    /**
+     * Returns 409 when creating/renaming a category to a name that already exists.
+     */
+    @ExceptionHandler(CategoryAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleCategoryAlreadyExists(@NonNull CategoryAlreadyExistsException ex) {
+        Map<String, String> body = new HashMap<>();
+        body.put(ERROR, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body); // 409
+    }
+
+    /**
+     * Returns 409 when attempting to delete a category still referenced by incidents.
+     */
+    @ExceptionHandler(CategoryInUseException.class)
+    public ResponseEntity<Map<String, String>> handleCategoryInUse(CategoryInUseException ex) {
+        Map<String, String> body = new HashMap<>();
+        body.put(ERROR, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body); // 409
     }
 
     @ExceptionHandler(Exception.class)

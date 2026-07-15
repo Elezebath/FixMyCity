@@ -1,11 +1,12 @@
 package lv.acnbootcamp.fixmycity.service;
 
-import lv.acnbootcamp.fixmycity.dto.UserAdminResponse;
+import lv.acnbootcamp.fixmycity.dto.user.UserAdminResponse;
 import lv.acnbootcamp.fixmycity.entity.Role;
 import lv.acnbootcamp.fixmycity.entity.User;
-import lv.acnbootcamp.fixmycity.exception.EmailAlreadyExistsException;
-import lv.acnbootcamp.fixmycity.exception.UserNotFoundException;
+import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
+import lv.acnbootcamp.fixmycity.exception.user.UserNotFoundException;
 import lv.acnbootcamp.fixmycity.repository.UserRepository;
+import lv.acnbootcamp.fixmycity.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

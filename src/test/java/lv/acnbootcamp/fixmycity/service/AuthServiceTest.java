@@ -1,10 +1,10 @@
 package lv.acnbootcamp.fixmycity.service;
 
-import lv.acnbootcamp.fixmycity.dto.RegisterRequest;
-import lv.acnbootcamp.fixmycity.dto.UserResponse;
+import lv.acnbootcamp.fixmycity.dto.auth.RegisterRequest;
+import lv.acnbootcamp.fixmycity.dto.user.UserResponse;
 import lv.acnbootcamp.fixmycity.entity.Role;
 import lv.acnbootcamp.fixmycity.entity.User;
-import lv.acnbootcamp.fixmycity.exception.EmailAlreadyExistsException;
+import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.repository.UserRepository;
 import lv.acnbootcamp.fixmycity.util.UserTestDataBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,8 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import lv.acnbootcamp.fixmycity.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
-import lv.acnbootcamp.fixmycity.dto.LoginRequest;
-import lv.acnbootcamp.fixmycity.dto.LoginResponse;
+import lv.acnbootcamp.fixmycity.dto.auth.LoginRequest;
+import lv.acnbootcamp.fixmycity.dto.auth.LoginResponse;
 import lv.acnbootcamp.fixmycity.security.UserDetailsImpl;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

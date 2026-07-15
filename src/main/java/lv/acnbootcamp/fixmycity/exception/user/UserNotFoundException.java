@@ -1,4 +1,4 @@
-package lv.acnbootcamp.fixmycity.exception;
+package lv.acnbootcamp.fixmycity.exception.user;
 
 public class UserNotFoundException extends RuntimeException {
     public UserNotFoundException(String message) {

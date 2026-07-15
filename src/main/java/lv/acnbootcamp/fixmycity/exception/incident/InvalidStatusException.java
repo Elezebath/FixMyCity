@@ -1,4 +1,4 @@
-package lv.acnbootcamp.fixmycity.exception;
+package lv.acnbootcamp.fixmycity.exception.incident;
 
 public class InvalidStatusException extends RuntimeException {
     public InvalidStatusException(String message) {

@@ -1,4 +1,4 @@
-package lv.acnbootcamp.fixmycity.dto;
+package lv.acnbootcamp.fixmycity.dto.auth;
 
 import lv.acnbootcamp.fixmycity.entity.Role;
 
