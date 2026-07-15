@@ -3,6 +3,7 @@ package lv.acnbootcamp.fixmycity.dto.incident;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @Getter
@@ -58,4 +59,12 @@ public class CreateIncidentRequest {
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     private Long citizenId;
+
+    @Schema(
+            description = "Optional attachment file (image or PDF, max 5MB). Can be omitted.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+            type = "string",
+            format = "binary"
+    )
+    private MultipartFile attachment;
 }

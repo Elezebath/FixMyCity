@@ -24,6 +24,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 import java.util.List;
 
@@ -119,7 +120,16 @@ public class IncidentController {
         return incidentService.findAllByCategory(categoryId);
     }
 
-    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @RequestBody(
+            content = @Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    schema = @Schema(implementation = CreateIncidentRequest.class)
+            )
+    )
     @ResponseStatus(HttpStatus.CREATED)
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyRole('CITIZEN', 'MANAGER', 'ADMIN')")
@@ -127,38 +137,41 @@ public class IncidentController {
             summary = "Report a new incident",
             description = "Creates a new incident with category, location and optional photo."
     )
-    @ApiResponse(
-            responseCode = "201",
-            description = "Incident created successfully"
-    )
-    @ApiResponse(
-            responseCode = "400",
-            description = "Validation failed",
-            content = @Content(
-                    schema = @Schema()
-            )
-    )
-    @ApiResponse(
-            responseCode = "401",
-            description = "Unauthorized"
-    )
-    @ApiResponse(
-            responseCode = "403",
-            description = "Access denied"
-    )
-    @ApiResponse(
-            responseCode = "404",
-            description = "Category not found"
-    )
-    @ApiResponse(
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "201",
+                description = "Incident created successfully"
+        ),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Validation failed",
+                content = @Content(
+                        schema = @Schema()
+                )
+        ),
+        @ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "Access denied"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Category not found"
+        ),
+        @ApiResponse(
             responseCode = "500",
             description = "Internal Server Error"
     )
-    public IncidentResponse create(@Valid @ModelAttribute CreateIncidentRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        log.info("REST request to create incident with title '{}', authenticated user: {}",
-                request.getTitle(), 
-                auth != null ? auth.getName() : "anonymous");
+    })
+    public IncidentResponse create(@Valid @ModelAttribute CreateIncidentRequest request, Authentication authentication) {
+
+        log.info("REST request to create incident with title '{}' by user '{}'",
+                request.getTitle(),
+                authentication.getName());
+
         return incidentService.create(request);
     }
 }

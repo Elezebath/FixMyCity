@@ -1,5 +1,6 @@
 package lv.acnbootcamp.fixmycity.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
@@ -144,6 +146,37 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    /**
+     * Returns 400 when file type is invalid.
+     */
+    @ExceptionHandler(InvalidFileTypeException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidFileType(InvalidFileTypeException ex) {
+        Map<String, String> body = new HashMap<>();
+        body.put(ERROR, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body); // 400
+    }
+
+    /**
+     * Returns 400 when file is too large.
+     */
+    @ExceptionHandler(FileTooLargeException.class)
+    public ResponseEntity<Map<String, String>> handleFileTooLarge(FileTooLargeException ex) {
+        Map<String, String> body = new HashMap<>();
+        body.put(ERROR, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body); // 400
+    }
+
+    /**
+     * Returns 500 when file storage operation fails.
+     */
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<Map<String, String>> handleFileStorageException(FileStorageException ex) {
+        log.error("File storage error", ex);
+        Map<String, String> body = new HashMap<>();
+        body.put(ERROR, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body); // 500
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleException(Exception ex) {
 
@@ -153,5 +186,25 @@ public class GlobalExceptionHandler {
         body.put(ERROR, "An unexpected error occurred");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<Map<String, String>> handleHandlerValidation(
+            HandlerMethodValidationException ex) {
+
+        Map<String, String> body = new HashMap<>();
+        body.put("error", "Invalid request parameter");
+
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, String>> handleConstraintViolation(
+            ConstraintViolationException ex) {
+
+        Map<String, String> body = new HashMap<>();
+        body.put("error", ex.getMessage());
+
+        return ResponseEntity.badRequest().body(body);
     }
 }
