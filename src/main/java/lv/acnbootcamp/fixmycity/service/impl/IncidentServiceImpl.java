@@ -3,6 +3,7 @@ package lv.acnbootcamp.fixmycity.service.impl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.entity.*;
@@ -180,6 +181,32 @@ public class IncidentServiceImpl implements IncidentService {
         return incidentMapper.toResponse(savedIncident);
     }
 
+    @Transactional
+    public IncidentResponse assignToCompany(Long incidentId, AssignIncidentRequest request) {
+        validateId(incidentId);
+
+        if (request == null || request.getCompanyId() == null) {
+            throw new InvalidIncidentException("Company ID is required");
+        }
+
+        Incident incident = incidentRepository
+                .findByIncidentIdAndSoftDeletedFalse(incidentId)
+                .orElseThrow(() -> new IncidentNotFoundException(
+                        "Incident not found with id: " + incidentId));
+
+        Company company = companyRepository
+                .findById(request.getCompanyId())
+                .orElseThrow(() -> new CompanyNotFoundException(
+                        "Company not found with id: " + request.getCompanyId()));
+
+        incident.setAssignedCompany(company);
+        incident.setStatus(IncidentStatus.ASSIGNED);
+
+        Incident savedIncident = incidentRepository.save(incident);
+        log.info("Incident {} assigned to company {}", incidentId, request.getCompanyId());
+
+        return incidentMapper.toResponse(savedIncident);
+    }
     private void validateRequest(CreateIncidentRequest request) {
 
         if (request == null) {
@@ -205,4 +232,5 @@ public class IncidentServiceImpl implements IncidentService {
             throw new IllegalArgumentException("Invalid id");
         }
     }
+
 }

@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.entity.IncidentPriority;
@@ -117,6 +118,22 @@ public class IncidentController {
             Long categoryId) {
 
         return incidentService.findAllByCategory(categoryId);
+    }
+
+    @PatchMapping("/{id}/assign")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @Operation(
+            summary = "Assign incident to company",
+            description = "Assigns an existing incident to a company for resolution"
+    )
+    @ApiResponse(responseCode = "200", description = "Incident assigned successfully")
+    @ApiResponse(responseCode = "404", description = "Incident or company not found")
+    public IncidentResponse assignToCompany(
+            @PathVariable Long id,
+            @Valid @RequestBody AssignIncidentRequest request) {
+
+        log.info("REST request to assign incident {} to company {}", id, request.getCompanyId());
+        return incidentService.assignToCompany(id, request);
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
