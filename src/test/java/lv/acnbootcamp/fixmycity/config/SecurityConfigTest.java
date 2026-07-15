@@ -12,6 +12,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = HealthController.class)
@@ -34,8 +35,8 @@ class SecurityConfigTest {
     }
 
     @Test
-    void protectedEndpoint_withoutAuth_returns401() throws Exception {
-        mockMvc.perform(get("/api/incidents/1"))
+    void createIncident_withoutAuth_returns401() throws Exception {
+        mockMvc.perform(post("/api/incidents"))
                 .andExpect(status().isUnauthorized());
     }
 
