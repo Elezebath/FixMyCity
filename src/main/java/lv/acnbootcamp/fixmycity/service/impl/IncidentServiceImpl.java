@@ -6,17 +6,17 @@ import lombok.extern.slf4j.Slf4j;
 import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
 import lv.acnbootcamp.fixmycity.entity.*;
 import lv.acnbootcamp.fixmycity.exception.*;
 import lv.acnbootcamp.fixmycity.mapper.IncidentMapper;
-import lv.acnbootcamp.fixmycity.repository.CategoryRepository;
-import lv.acnbootcamp.fixmycity.repository.CompanyRepository;
-import lv.acnbootcamp.fixmycity.repository.IncidentRepository;
-import lv.acnbootcamp.fixmycity.repository.UserRepository;
+import lv.acnbootcamp.fixmycity.repository.*;
 import lv.acnbootcamp.fixmycity.service.IncidentService;
+import org.antlr.v4.runtime.misc.LogManager;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 @Service
 @RequiredArgsConstructor
@@ -29,6 +29,7 @@ public class IncidentServiceImpl implements IncidentService {
     private final IncidentMapper incidentMapper;
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
+    private final CommentRepository commentRepository;
 
     /**
      * Find all active incidents
@@ -207,6 +208,47 @@ public class IncidentServiceImpl implements IncidentService {
 
         return incidentMapper.toResponse(savedIncident);
     }
+
+    @Transactional
+    public IncidentResponse resolveByCompany(Long incidentId, ResolveIncidentRequest request, String resolvedByEmail) {
+        validateId(incidentId);
+
+        if (request == null || !StringUtils.hasText(request.getComment())) {
+            throw new InvalidIncidentException("Comment is required to resolve an incident");
+        }
+
+        Incident incident = incidentRepository
+                .findByIncidentIdAndSoftDeletedFalse(incidentId)
+                .orElseThrow(() -> new IncidentNotFoundException(
+                        "Incident not found with id: " + incidentId));
+
+        User resolvedBy = userRepository.findByEmail(resolvedByEmail)
+                .orElseThrow(() -> new UserNotFoundException(
+                        "User not found with email: " + resolvedByEmail));
+
+        if (incident.getAssignedCompany() == null
+                || resolvedBy.getCompany() == null
+                || !incident.getAssignedCompany().getCompanyId().equals(resolvedBy.getCompany().getCompanyId())) {
+            throw new InvalidIncidentException("Only the assigned company can resolve this incident");
+        }
+
+        incident.setStatus(IncidentStatus.RESOLVED);
+        incident.setResolvedAt(LocalDateTime.now());
+        incidentRepository.save(incident);
+
+        Comment comment = Comment.builder()
+                .incident(incident)
+                .user(resolvedBy)
+                .comment(request.getComment())
+                .build();
+
+        commentRepository.save(comment);
+
+        log.info("Incident {} resolved by {}", incidentId, resolvedByEmail);
+
+        return incidentMapper.toResponse(incident);
+    }
+
     private void validateRequest(CreateIncidentRequest request) {
 
         if (request == null) {

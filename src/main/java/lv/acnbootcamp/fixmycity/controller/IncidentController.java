@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
 import lv.acnbootcamp.fixmycity.entity.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.IncidentStatus;
 import lv.acnbootcamp.fixmycity.service.IncidentService;
@@ -134,6 +135,26 @@ public class IncidentController {
 
         log.info("REST request to assign incident {} to company {}", id, request.getCompanyId());
         return incidentService.assignToCompany(id, request);
+    }
+
+    @PatchMapping("/{id}/resolve")
+    @PreAuthorize("hasRole('COMPANY')")
+    @Operation(
+            summary = "Resolve incident by company",
+            description = "Marks an incident as resolved with a required closing comment"
+    )
+    @ApiResponse(responseCode = "200", description = "Incident resolved successfully")
+    @ApiResponse(responseCode = "400", description = "Comment missing or company not assigned to this incident")
+    @ApiResponse(responseCode = "404", description = "Incident not found")
+    public IncidentResponse resolveByCompany(
+            @PathVariable Long id,
+            @Valid @RequestBody ResolveIncidentRequest request) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String resolvedByEmail = auth.getName();
+
+        log.info("REST request to resolve incident {} by {}", id, resolvedByEmail);
+        return incidentService.resolveByCompany(id, request, resolvedByEmail);
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
