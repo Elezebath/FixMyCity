@@ -35,7 +35,7 @@ public class IncidentResponse {
     private Long citizenId;
 
     @Schema(example = "John Doe")
-    private Long citizenName;
+    private String citizenName;
 
     @Schema(example = "NEW")
     private String status;
