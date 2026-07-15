@@ -7,6 +7,7 @@ import lv.acnbootcamp.fixmycity.entity.Role;
 import lv.acnbootcamp.fixmycity.exception.EmailAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import lv.acnbootcamp.fixmycity.service.AuthService;
+import lv.acnbootcamp.fixmycity.service.PasswordRecoveryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -33,6 +34,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private PasswordRecoveryService passwordRecoveryService;
 
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
