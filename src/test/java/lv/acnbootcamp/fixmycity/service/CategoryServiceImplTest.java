@@ -11,6 +11,7 @@ import lv.acnbootcamp.fixmycity.service.impl.CategoryServiceImpl;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,6 +34,9 @@ class CategoryServiceImplTest {
     @Mock
     private IncidentRepository incidentRepository;
 
+    @Mock
+    private AuditLogService auditLogService;
+
     @InjectMocks
     private CategoryServiceImpl categoryService;
 
@@ -41,6 +45,7 @@ class CategoryServiceImplTest {
                 .categoryId(id)
                 .name(name)
                 .description("Some description")
+                .isDeleted(false)
                 .build();
     }
 
@@ -49,7 +54,7 @@ class CategoryServiceImplTest {
 
         @Test
         void returnsAllCategoriesMappedToResponses() {
-            when(categoryRepository.findAll())
+            when(categoryRepository.findAllByIsDeletedFalse())
                     .thenReturn(List.of(buildCategory(1L, "Roads"), buildCategory(2L, "Lighting")));
 
             List<CategoryResponse> result = categoryService.getAllCategories();
@@ -64,7 +69,8 @@ class CategoryServiceImplTest {
 
         @Test
         void returnsCategory_whenFound() {
-            when(categoryRepository.findById(1L)).thenReturn(Optional.of(buildCategory(1L, "Roads")));
+            when(categoryRepository.findByCategoryIdAndIsDeletedFalse(1L))
+                    .thenReturn(Optional.of(buildCategory(1L, "Roads")));
 
             CategoryResponse result = categoryService.getCategoryById(1L);
 
@@ -74,7 +80,7 @@ class CategoryServiceImplTest {
 
         @Test
         void throwsNotFound_whenMissing() {
-            when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
+            when(categoryRepository.findByCategoryIdAndIsDeletedFalse(99L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> categoryService.getCategoryById(99L))
                     .isInstanceOf(CategoryNotFoundException.class);
@@ -117,7 +123,7 @@ class CategoryServiceImplTest {
         @Test
         void updatesNameAndDescription_whenNoConflict() {
             Category existing = buildCategory(1L, "Roads");
-            when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(categoryRepository.findByCategoryIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(existing));
             when(categoryRepository.existsByNameIgnoreCase("Roads & Potholes")).thenReturn(false);
             when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -129,7 +135,7 @@ class CategoryServiceImplTest {
 
         @Test
         void throwsNotFound_whenCategoryMissing() {
-            when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
+            when(categoryRepository.findByCategoryIdAndIsDeletedFalse(99L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> categoryService.updateCategory(99L, "Roads", "desc"))
                     .isInstanceOf(CategoryNotFoundException.class);
@@ -140,7 +146,7 @@ class CategoryServiceImplTest {
         @Test
         void throwsAlreadyExists_whenRenamingToAnotherExistingName() {
             Category existing = buildCategory(1L, "Roads");
-            when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(categoryRepository.findByCategoryIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(existing));
             when(categoryRepository.existsByNameIgnoreCase("Lighting")).thenReturn(true);
 
             assertThatThrownBy(() -> categoryService.updateCategory(1L, "Lighting", "desc"))
@@ -152,7 +158,7 @@ class CategoryServiceImplTest {
         @Test
         void allowsUpdate_whenNameUnchanged() {
             Category existing = buildCategory(1L, "Roads");
-            when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(categoryRepository.findByCategoryIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(existing));
             when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
 
             categoryService.updateCategory(1L, "Roads", "New description");
@@ -166,36 +172,41 @@ class CategoryServiceImplTest {
     class DeleteCategory {
 
         @Test
-        void deletesCategory_whenNotReferenced() {
+        void softDeletesCategory_whenNotReferenced() {
             Category existing = buildCategory(1L, "Roads");
-            when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(categoryRepository.findByCategoryIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(existing));
             when(incidentRepository.existsBySoftDeletedFalseAndCategory_CategoryId(1L)).thenReturn(false);
+            when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> inv.getArgument(0));
 
             categoryService.deleteCategory(1L);
 
-            verify(categoryRepository).delete(existing);
+            ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
+            verify(categoryRepository).save(captor.capture());
+            assertThat(captor.getValue().getIsDeleted()).isTrue();
+
+            verify(categoryRepository, never()).delete(any(Category.class));
         }
 
         @Test
         void throwsNotFound_whenCategoryMissing() {
-            when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
+            when(categoryRepository.findByCategoryIdAndIsDeletedFalse(99L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> categoryService.deleteCategory(99L))
                     .isInstanceOf(CategoryNotFoundException.class);
 
-            verify(categoryRepository, never()).delete(any(Category.class));
+            verify(categoryRepository, never()).save(any(Category.class));
         }
 
         @Test
         void throwsInUse_whenReferencedByIncidents() {
             Category existing = buildCategory(1L, "Roads");
-            when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(categoryRepository.findByCategoryIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(existing));
             when(incidentRepository.existsBySoftDeletedFalseAndCategory_CategoryId(1L)).thenReturn(true);
 
             assertThatThrownBy(() -> categoryService.deleteCategory(1L))
                     .isInstanceOf(CategoryInUseException.class);
 
-            verify(categoryRepository, never()).delete(any(Category.class));
+            verify(categoryRepository, never()).save(any(Category.class));
         }
     }
 }
