@@ -7,12 +7,16 @@ import Incidents from './pages/Incidents.jsx';
 import IncidentDetail from './pages/IncidentDetail.jsx';
 import ReportIssue from './pages/ReportIssue.jsx';
 import NotFound from './pages/NotFound.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 import './App.css';
 
 function App() {
     return (
         <Routes>
             <Route path="/" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             <Route element={<ProtectedRoute />}>
                 <Route path="/app" element={<MainLayout />}>
