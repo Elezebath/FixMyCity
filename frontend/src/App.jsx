@@ -10,6 +10,7 @@ import NotFound from './pages/NotFound.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import './App.css';
+import Assignment from "./pages/Assignment.jsx";
 
 function App() {
     return (
@@ -24,6 +25,11 @@ function App() {
                     <Route path="incidents" element={<Incidents />} />
                     <Route path="incidents/:id" element={<IncidentDetail />} />
                     <Route path="report" element={<ReportIssue />} />
+                    <Route path="assignment" element={
+                        ['MANAGER', 'ADMIN'].includes(
+                            JSON.parse(localStorage.getItem('user') || 'null')?.role
+                        ) ? <Assignment /> : <NotFound />
+                    } />
                 </Route>
             </Route>
 
