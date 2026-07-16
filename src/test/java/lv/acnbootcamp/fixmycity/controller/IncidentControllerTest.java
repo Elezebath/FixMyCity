@@ -19,6 +19,12 @@ import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import lv.acnbootcamp.fixmycity.service.IncidentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
+import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
+import lv.acnbootcamp.fixmycity.security.JwtAuthenticationFilter;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +44,11 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import tools.jackson.databind.json.JsonMapper;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(IncidentController.class)
 @Import(SecurityConfig.class)
@@ -46,11 +57,17 @@ class IncidentControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private JsonMapper jsonMapper;
+
     @MockitoBean
     private IncidentService incidentService;
 
     @MockitoBean
     private UserRepository userRepository;
+    
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
@@ -61,12 +78,20 @@ class IncidentControllerTest {
     private User testCitizen;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         testCitizen = User.builder()
                 .id(10L)
                 .email("testuser@test.com")
                 .role(Role.CITIZEN)
                 .build();
+
+        doAnswer(invocation -> {
+            HttpServletRequest request = invocation.getArgument(0);
+            HttpServletResponse response = invocation.getArgument(1);
+            FilterChain chain = invocation.getArgument(2);
+            chain.doFilter(request, response);
+            return null;
+        }).when(jwtAuthenticationFilter).doFilter(any(), any(), any());
     }
 
     private IncidentResponse createResponse(Long id) {
@@ -747,6 +772,56 @@ class IncidentControllerTest {
     }
 
     @Nested
+    class AssignEndpoint {
+
+        @Test
+        void returns401WhenUnauthenticated() throws Exception {
+            AssignIncidentRequest request = AssignIncidentRequest.builder().companyId(1L).build();
+
+            mockMvc.perform(patch("/api/incidents/10/assign")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonMapper.writeValueAsString(request)))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @WithMockUser(roles = "CITIZEN")
+        void returns403WhenRoleIsCitizen() throws Exception {
+            AssignIncidentRequest request = AssignIncidentRequest.builder().companyId(1L).build();
+
+            mockMvc.perform(patch("/api/incidents/10/assign")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonMapper.writeValueAsString(request)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns200WhenRoleIsManager() throws Exception {
+            AssignIncidentRequest request = AssignIncidentRequest.builder().companyId(1L).build();
+
+            when(incidentService.assignToCompany(anyLong(), any(AssignIncidentRequest.class)))
+                    .thenReturn(new IncidentResponse());
+
+            mockMvc.perform(patch("/api/incidents/10/assign")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns400WhenCompanyIdMissing() throws Exception {
+            AssignIncidentRequest request = AssignIncidentRequest.builder().companyId(null).build();
+
+            mockMvc.perform(patch("/api/incidents/10/assign")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
     @DisplayName("Exception Handling Tests")
     class ExceptionHandlingTests {
 
@@ -787,6 +862,61 @@ class IncidentControllerTest {
                     .thenThrow(new InvalidStatusException("Invalid status"));
 
             mockMvc.perform(get("/api/incidents/status/NEW"))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    @DisplayName("Resolve Endpoint Tests")
+    class ResolveEndpoint {
+
+        @Test
+        @WithMockUser(roles = "CITIZEN")
+        void returns403WhenRoleIsNotAuthorized() throws Exception {
+            ResolveIncidentRequest request = ResolveIncidentRequest.builder().comment("Fixed it").build();
+
+            mockMvc.perform(patch("/api/incidents/10/resolve")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonMapper.writeValueAsString(request)))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns200WhenRoleIsManager() throws Exception {
+            ResolveIncidentRequest request = ResolveIncidentRequest.builder().comment("Fixed it").build();
+
+            when(incidentService.resolveByCompany(anyLong(), any(ResolveIncidentRequest.class), any()))
+                    .thenReturn(new IncidentResponse());
+
+            mockMvc.perform(patch("/api/incidents/10/resolve")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
+        @WithMockUser(roles = "COMPANY")
+        void returns200WhenRoleIsCompany() throws Exception {
+            ResolveIncidentRequest request = ResolveIncidentRequest.builder().comment("Fixed it").build();
+
+            when(incidentService.resolveByCompany(anyLong(), any(ResolveIncidentRequest.class), any()))
+                    .thenReturn(new IncidentResponse());
+
+            mockMvc.perform(patch("/api/incidents/10/resolve")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
+        @WithMockUser(roles = "COMPANY")
+        void returns400WhenCommentIsBlank() throws Exception {
+            ResolveIncidentRequest request = ResolveIncidentRequest.builder().comment("").build();
+
+            mockMvc.perform(patch("/api/incidents/10/resolve")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
         }
     }

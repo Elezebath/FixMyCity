@@ -189,10 +189,35 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 
+    /**
+     * Returns 400 when a password-reset token
+     * is invalid, expired, or already used.
+     */
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<Map<String, String>>
+    handleInvalidPasswordResetToken(
+            InvalidPasswordResetTokenException ex
+    ) {
+        Map<String, String> body = new HashMap<>();
+
+        body.put(ERROR, ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(body);
+    }
+
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<Map<String, String>> handleNoResourceFound(NoResourceFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Resource not found"));
+    public ResponseEntity<Map<String, String>>
+    handleNoResourceFound(
+            NoResourceFoundException ex
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                        ERROR,
+                        "Resource not found"
+                ));
     }
 
     /**

@@ -101,12 +101,13 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/api/auth/register",
-                                "/api/auth/login"
+                                "/api/auth/login",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password"
                         ).permitAll()
-                        .requestMatchers(
-                                HttpMethod.GET
-                                ,"/api/incidents/**")
-                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/incidents/**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/assign").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/resolve").hasAnyRole("COMPANY", "MANAGER")
                         .requestMatchers("/api/incidents/**").hasAnyRole("CITIZEN", "MANAGER", "ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
