@@ -11,10 +11,24 @@ spring:
     show-sql: false
     database-platform: org.hibernate.dialect.H2Dialect
 
+  mail:
+    host: localhost
+    port: 3025
+    username: test
+    password: test
+
 logging:
   level:
     org.hibernate.SQL: warn
 
+
 jwt:
   secret: 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
   expiration-ms: 3600000
+
+email:
+  from: test@fixmycity.local
+
+password-reset:
+  expiration-minutes: 30
+  frontend-url: http://localhost:3150/reset-password
