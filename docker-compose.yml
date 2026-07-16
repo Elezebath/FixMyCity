@@ -46,7 +46,7 @@ services:
       HOST_UPLOAD_PATH: ${HOST_UPLOAD_PATH:-/app/uploads}
 
     volumes:
-      - "${HOST_UPLOAD_PATH}:${APP_UPLOAD_PATH}"
+      - "${HOST_UPLOAD_PATH:-./uploads}:${APP_UPLOAD_PATH:-/app/uploads}"
 
     ports:
       - "${SERVER_PORT:-3100}:${SERVER_PORT:-3100}"
