@@ -1,11 +1,14 @@
 package lv.acnbootcamp.fixmycity.service.impl;
 
 import lv.acnbootcamp.fixmycity.dto.user.UserAdminResponse;
+import lv.acnbootcamp.fixmycity.entity.AuditAction;
+import lv.acnbootcamp.fixmycity.entity.AuditEntityType;
 import lv.acnbootcamp.fixmycity.entity.Role;
 import lv.acnbootcamp.fixmycity.entity.User;
 import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.exception.user.UserNotFoundException;
 import lv.acnbootcamp.fixmycity.repository.UserRepository;
+import lv.acnbootcamp.fixmycity.service.AuditLogService;
 import lv.acnbootcamp.fixmycity.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,10 +20,14 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogService auditLogService;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository,
+                           PasswordEncoder passwordEncoder,
+                           AuditLogService auditLogService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.auditLogService = auditLogService;
     }
 
     @Override
@@ -49,7 +56,10 @@ public class UserServiceImpl implements UserService {
                 .enabled(true)
                 .build();
 
-        return mapToResponse(userRepository.save(user));
+        User saved = userRepository.save(user);
+        auditLogService.log(AuditEntityType.USER, saved.getId(), AuditAction.CREATE,
+                "Created user '" + saved.getEmail() + "' with role " + saved.getRole());
+        return mapToResponse(saved);
     }
 
     @Override
@@ -60,23 +70,37 @@ public class UserServiceImpl implements UserService {
             throw new EmailAlreadyExistsException(email);
         }
 
+        String oldEmail = user.getEmail();
         user.setEmail(email);
         user.setFullName(fullName);
-        return mapToResponse(userRepository.save(user));
+
+        User saved = userRepository.save(user);
+        auditLogService.log(AuditEntityType.USER, saved.getId(), AuditAction.UPDATE,
+                "Updated profile: email '" + oldEmail + "' -> '" + saved.getEmail() + "'");
+        return mapToResponse(saved);
     }
 
     @Override
     public UserAdminResponse updateUserRole(Long id, Role newRole) {
         User user = findUserOrThrow(id);
+        Role oldRole = user.getRole();
         user.setRole(newRole);
-        return mapToResponse(userRepository.save(user));
+
+        User saved = userRepository.save(user);
+        auditLogService.log(AuditEntityType.USER, saved.getId(), AuditAction.UPDATE,
+                "Changed role: " + oldRole + " -> " + newRole);
+        return mapToResponse(saved);
     }
 
     @Override
     public UserAdminResponse updateUserStatus(Long id, boolean enabled) {
         User user = findUserOrThrow(id);
         user.setEnabled(enabled);
-        return mapToResponse(userRepository.save(user));
+
+        User saved = userRepository.save(user);
+        auditLogService.log(AuditEntityType.USER, saved.getId(), AuditAction.UPDATE,
+                (enabled ? "Enabled" : "Disabled") + " user '" + saved.getEmail() + "'");
+        return mapToResponse(saved);
     }
 
     private User findUserOrThrow(Long id) {

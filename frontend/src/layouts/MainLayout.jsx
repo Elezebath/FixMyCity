@@ -1,13 +1,13 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import './MainLayout.css';
 
-const BASE_NAV_ITEMS = [
+const ALL_NAV_ITEMS = [
     { to: '/app/dashboard', label: 'Dashboard', icon: '📊' },
     { to: '/app/incidents', label: 'Incidents', icon: '📋' },
     { to: '/app/report', label: 'Report Issue', icon: '➕' },
+    { to: '/app/assignment', label: 'Assignment', icon: '🗂', roles: ['MANAGER', 'ADMIN'] },
+    { to: '/app/admin/users', label: 'User Administration', icon: '🛡️', roles: ['ADMIN'] },
 ];
-
-const ADMIN_NAV_ITEM = { to: '/app/admin/users', label: 'User Administration', icon: '🛡️' };
 
 function MainLayout() {
     const navigate = useNavigate();
@@ -15,9 +15,9 @@ function MainLayout() {
     const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
     const user = storedUser || { fullName: '', role: '' };
 
-    const navItems = user.role === 'ADMIN'
-        ? [...BASE_NAV_ITEMS, ADMIN_NAV_ITEM]
-        : BASE_NAV_ITEMS;
+    const visibleNavItems = ALL_NAV_ITEMS.filter(
+        (item) => !item.roles || item.roles.includes(user.role)
+    );
 
     const initials = user.fullName
         ? user.fullName
@@ -45,7 +45,7 @@ function MainLayout() {
                 </div>
 
                 <nav className="sidebar__nav">
-                    {navItems.map((item) => (
+                    {visibleNavItems.map((item) => (
                         <NavLink
                             key={item.to}
                             to={item.to}

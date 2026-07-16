@@ -18,6 +18,9 @@ import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
 import lv.acnbootcamp.fixmycity.entity.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.IncidentStatus;
+import lv.acnbootcamp.fixmycity.entity.User;
+import lv.acnbootcamp.fixmycity.exception.UnauthorizedException;
+import lv.acnbootcamp.fixmycity.repository.UserRepository;
 import lv.acnbootcamp.fixmycity.service.IncidentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,8 +28,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.beans.PropertyEditorSupport;
 import java.util.List;
 
 @RestController
@@ -41,6 +47,24 @@ import java.util.List;
 public class IncidentController {
 
     private final IncidentService incidentService;
+    private final UserRepository userRepository;
+
+    /**
+     * Swagger UI (and some HTML forms) submit an empty string for a file
+     * input that was left empty, instead of omitting the part entirely.
+     * Spring has no built-in String -> MultipartFile converter, so without
+     * this it fails with a 400 "Failed to convert property value" error.
+     * This editor treats an empty/blank string as "no file provided".
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(MultipartFile.class, new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) {
+                setValue(null);
+            }
+        });
+    }
 
     @GetMapping
     @Operation(
@@ -157,46 +181,58 @@ public class IncidentController {
         return incidentService.resolveByCompany(id, request, resolvedByEmail);
     }
 
-    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
     @ResponseStatus(HttpStatus.CREATED)
+    @SecurityRequirement(name = "bearerAuth")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyRole('CITIZEN', 'MANAGER', 'ADMIN')")
     @Operation(
             summary = "Report a new incident",
             description = "Creates a new incident with category, location and optional photo."
     )
-    @ApiResponse(
-            responseCode = "201",
-            description = "Incident created successfully"
-    )
-    @ApiResponse(
-            responseCode = "400",
-            description = "Validation failed",
-            content = @Content(
-                    schema = @Schema()
-            )
-    )
-    @ApiResponse(
-            responseCode = "401",
-            description = "Unauthorized"
-    )
-    @ApiResponse(
-            responseCode = "403",
-            description = "Access denied"
-    )
-    @ApiResponse(
-            responseCode = "404",
-            description = "Category not found"
-    )
-    @ApiResponse(
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "201",
+                description = "Incident created successfully"
+        ),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Validation failed",
+                content = @Content(
+                        schema = @Schema()
+                )
+        ),
+        @ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized"
+        ),
+        @ApiResponse(
+                responseCode = "403",
+                description = "Access denied"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Category not found"
+        ),
+        @ApiResponse(
             responseCode = "500",
             description = "Internal Server Error"
-    )
-    public IncidentResponse create(@Valid @ModelAttribute CreateIncidentRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        log.info("REST request to create incident with title '{}', authenticated user: {}",
-                request.getTitle(), 
-                auth != null ? auth.getName() : "anonymous");
-        return incidentService.create(request);
+        )
+    })
+    public IncidentResponse create(@Valid @ModelAttribute CreateIncidentRequest request, Authentication authentication) {
+
+        log.info("REST request to create incident with title '{}' by user '{}'",
+                request.getTitle(),
+                authentication.getName());
+
+        // Resolve citizen ID from authenticated user
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("User not found with email: " + email));
+
+        return incidentService.create(request, user.getId());
     }
 }

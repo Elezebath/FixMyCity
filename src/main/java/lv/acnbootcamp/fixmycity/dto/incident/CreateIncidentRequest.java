@@ -1,8 +1,10 @@
 package lv.acnbootcamp.fixmycity.dto.incident;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @Getter
@@ -49,13 +51,10 @@ public class CreateIncidentRequest {
     )
     private String locationAddress;
 
-    @NotNull(message = "Citizen ID is required.")
-    @Min(1)
-    @Positive(message = "Citizen ID must be positive.")
-    @Schema(
-            description = "ID of the citizen reporting the incident",
-            example = "42",
-            requiredMode = Schema.RequiredMode.REQUIRED
+    @Parameter(
+            description = "Optional attachment (image or PDF)",
+            required = false
     )
-    private Long citizenId;
+    @Schema(type = "string", format = "binary")
+    private MultipartFile attachment;
 }

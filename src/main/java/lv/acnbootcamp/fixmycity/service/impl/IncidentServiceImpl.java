@@ -19,8 +19,10 @@ import lv.acnbootcamp.fixmycity.mapper.IncidentMapper;
 import lv.acnbootcamp.fixmycity.repository.*;
 import lv.acnbootcamp.fixmycity.service.IncidentService;
 import org.antlr.v4.runtime.misc.LogManager;
+import lv.acnbootcamp.fixmycity.storage.FileStorageService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,6 +36,8 @@ public class IncidentServiceImpl implements IncidentService {
     private final CategoryRepository categoryRepository;
     private final IncidentMapper incidentMapper;
     private final UserRepository userRepository;
+    private final FileStorageService fileStorageService;
+    private final AttachmentRepository attachmentRepository;
     private final CompanyRepository companyRepository;
     private final CommentRepository commentRepository;
 
@@ -158,20 +162,24 @@ public class IncidentServiceImpl implements IncidentService {
     /**
      * Create new incident
      */
+    @Override
     @Transactional
-    public IncidentResponse create(CreateIncidentRequest request) {
+    public IncidentResponse create(CreateIncidentRequest request, Long citizenId) {
         validateRequest(request);
 
-        log.info("Creating new incident for category {}", request.getCategoryId());
+        log.info("Creating new incident for category {} by citizen {}", request.getCategoryId(), citizenId);
 
-        User citizen = userRepository.findById(request.getCitizenId())
+        // Find the citizen
+        User citizen = userRepository.findById(citizenId)
                 .orElseThrow(() -> new UserNotFoundException(
-                        "User not found with id: " + request.getCitizenId()));
+                        "User not found with id: " + citizenId));
 
+        // Find the category
         Category category = categoryRepository
                 .findById(request.getCategoryId())
                 .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
 
+        // Build the incident
         Incident incident = Incident.builder()
                 .title(request.getTitle()).description(request.getDescription())
                 .locationAddress(request.getLocationAddress())
@@ -182,8 +190,36 @@ public class IncidentServiceImpl implements IncidentService {
                 .softDeleted(false)
                 .build();
 
+        // Save the incident
         Incident savedIncident = incidentRepository.save(incident);
         log.info("Incident created successfully with id {}", savedIncident.getIncidentId());
+
+        // Handle file attachment if present
+        MultipartFile attachmentFile = request.getAttachment();
+        if (attachmentFile != null && !attachmentFile.isEmpty()) {
+            log.info("Processing attachment for incident {}", savedIncident.getIncidentId());
+
+            // Validate and store the file
+            fileStorageService.validateFile(attachmentFile);
+            String storedFileName = fileStorageService.storeFile(attachmentFile);
+
+            if (storedFileName != null) {
+                // Create and persist the attachment entity
+                Attachment attachment = Attachment.builder()
+                        .incident(savedIncident)
+                        .fileName(attachmentFile.getOriginalFilename())
+                        .filePath("/uploads/" + storedFileName)
+                        .fileType(fileStorageService.getContentType(attachmentFile))
+                        .build();
+
+                attachmentRepository.save(attachment);
+                log.info("Attachment saved with id {} for incident {}",
+                        attachment.getAttachmentId(), savedIncident.getIncidentId());
+
+                // Add attachment to incident's list
+                savedIncident.getAttachments().add(attachment);
+            }
+        }
 
         return incidentMapper.toResponse(savedIncident);
     }
@@ -255,6 +291,9 @@ public class IncidentServiceImpl implements IncidentService {
         return incidentMapper.toResponse(incident);
     }
 
+    /**
+     * Validate the create incident request
+     */
     private void validateRequest(CreateIncidentRequest request) {
 
         if (request == null) {
@@ -275,6 +314,9 @@ public class IncidentServiceImpl implements IncidentService {
 
     }
 
+    /**
+     * Validate the id
+     */
     private void validateId(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("Invalid id");
