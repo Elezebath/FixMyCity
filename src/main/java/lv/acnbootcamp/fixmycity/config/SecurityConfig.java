@@ -103,7 +103,10 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
-                                "/api/auth/reset-password"
+                                "/api/auth/reset-password",
+                                "/index.html",
+                                "/assets/**",
+                                "/app/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/incidents/**").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/assign").hasAnyRole("MANAGER", "ADMIN")
