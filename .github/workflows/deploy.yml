@@ -114,7 +114,7 @@ jobs:
           SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
           SMTP_FROM=${{ secrets.SMTP_FROM }}
-          FRONTEND_RESET_PASSWORD_URL=https://team1.acnbootcamp.lv/reset-password
+          FRONTEND_RESET_PASSWORD_URL=https://team1.acnbootcamp.lv/forgot-password
           PASSWORD_RESET_EXPIRATION_MINUTES=30
           EOF
 
