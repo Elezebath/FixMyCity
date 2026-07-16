@@ -103,8 +103,11 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
-                                "/api/auth/reset-password"
+                                "/api/auth/reset-password",
+                                // Public static serving of incident attachments
+                                "/uploads/**"
                         ).permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/api/incidents/**").permitAll()
                         // Citizen-accessible category list for the create-incident form
                         .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").authenticated()

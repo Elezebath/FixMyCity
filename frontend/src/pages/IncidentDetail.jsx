@@ -198,10 +198,26 @@ function IncidentDetail() {
 
     if (!incident) return null;
 
+    const fileType = (
+        incident.attachmentType ||
+        incident.attachment?.fileType ||
+        ''
+    ).toLowerCase();
+    const fileName = (
+        incident.attachmentName ||
+        incident.attachment?.fileName ||
+        incident.photoUrl ||
+        ''
+    ).toLowerCase();
+    // Prefer MIME type; fall back to extension if type is missing/wrong
     const isImage =
-        incident.attachment?.fileType?.startsWith('image/') ||
-        (incident.photoUrl &&
-            !incident.attachment?.fileType?.includes('pdf'));
+        fileType.startsWith('image/') ||
+        /\.(jpe?g|png|gif|webp)$/i.test(fileName);
+    const isPdf =
+        fileType === 'application/pdf' ||
+        fileType.includes('pdf') ||
+        fileName.endsWith('.pdf');
+
 
     return (
         <div className="incident-detail">
@@ -260,7 +276,18 @@ function IncidentDetail() {
                     <div className="incident-detail__card">
                         <div className="incident-detail__photo">
                             {incident.photoUrl && isImage ? (
-                                <img src={incident.photoUrl} alt={incident.title} />
+                                <a
+                                    href={incident.photoUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="incident-detail__photo-link"
+                                    title="Open full image in new tab"
+                                >
+                                    <img
+                                        src={incident.photoUrl}
+                                        alt={incident.attachmentName || incident.title}
+                                    />
+                                </a>
                             ) : incident.photoUrl ? (
                                 <a
                                     href={incident.photoUrl}
@@ -268,7 +295,8 @@ function IncidentDetail() {
                                     rel="noreferrer"
                                     className="incident-detail__attachment-link"
                                 >
-                                    📎 {incident.attachmentName || 'View attachment'}
+                                    {isPdf ? '📄' : '📎'}{' '}
+                                    {incident.attachmentName || 'View attachment'}
                                 </a>
                             ) : (
                                 <span className="incident-detail__photo-empty">
@@ -276,6 +304,8 @@ function IncidentDetail() {
                                 </span>
                             )}
                         </div>
+
+
 
                         <h3>Description</h3>
                         <p className="incident-detail__description">

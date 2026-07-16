@@ -62,21 +62,46 @@ export function formatRelative(value) {
     }
 }
 
+/**
+ * Build a browser-loadable URL for an attachment filePath from the API.
+ * API returns paths like "/uploads/{uuid}.jpg". Files are served by the
+ * backend at the same path (see WebMvcConfig).
+ */
+export function resolveAttachmentUrl(filePath) {
+    if (!filePath) return null;
+    // Already absolute
+    if (/^https?:\/\//i.test(filePath)) return filePath;
+
+    // Backend stores "/uploads/{file}" and serves it at the same path (WebMvcConfig).
+    // Always prefix with the API origin so the browser does not request the Vite host.
+    const base = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3100').replace(
+        /\/$/,
+        ''
+    );
+    const path = filePath.startsWith('/') ? filePath : `/${filePath}`;
+    return `${base}${path}`;
+}
+
+
 /** Normalize API incident (incidentId) for UI */
 export function normalizeIncident(raw) {
     if (!raw) return null;
+    const attachment = raw.attachment || null;
     return {
         ...raw,
         id: raw.incidentId ?? raw.id,
         category: raw.categoryName ?? raw.category,
         address: raw.locationAddress ?? raw.address,
         reportedBy: raw.citizenName ?? raw.reportedBy,
-        photoUrl: raw.attachment?.filePath
-            ? `${import.meta.env.VITE_API_BASE_URL}${raw.attachment.filePath.startsWith('/') ? '' : '/'}${raw.attachment.filePath}`
+        attachment,
+        photoUrl: attachment?.filePath
+            ? resolveAttachmentUrl(attachment.filePath)
             : raw.photoUrl || null,
-        attachmentName: raw.attachment?.fileName || null,
+        attachmentName: attachment?.fileName || null,
+        attachmentType: attachment?.fileType || null,
     };
 }
+
 
 export const ALLOWED_ATTACHMENT_TYPES = [
     'image/jpeg',
