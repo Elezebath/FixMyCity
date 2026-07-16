@@ -24,7 +24,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     private final Path fileStorageLocation;
     private final FileValidator fileValidator;
 
-    public FileStorageServiceImpl(@Value("${app.upload.path:uploads}") String uploadPath, FileValidator fileValidator) {
+    public FileStorageServiceImpl(@Value("${APP_UPLOAD_PATH:uploads}") String uploadPath, FileValidator fileValidator) {
         this.fileStorageLocation = Paths.get(uploadPath).toAbsolutePath().normalize();
         this.fileValidator = fileValidator;
         try {
