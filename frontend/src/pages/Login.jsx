@@ -2,12 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
-const DEMO_ACCOUNTS = [
-    { label: 'citizen@demo.com', role: 'Citizen' },
-    { label: 'manager@demo.com', role: 'Manager' },
-    { label: 'company@demo.com', role: 'Company' },
-    { label: 'admin@demo.com', role: 'Admin' },
-];
 
 function Login() {
     const navigate = useNavigate();
@@ -160,20 +154,6 @@ function Login() {
                             </button>
                         </form>
 
-                        <div className="login-demo">
-                            <strong>Demo accounts</strong> (password: <code>demo</code>)
-                            <div className="login-demo__list">
-                                {DEMO_ACCOUNTS.map((acc) => (
-                                    <button
-                                        key={acc.label}
-                                        type="button"
-                                        onClick={() => setEmail(acc.label)}
-                                    >
-                                        {acc.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
                     </>
                 ) : (
                     <>

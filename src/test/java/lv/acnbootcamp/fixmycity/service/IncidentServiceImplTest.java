@@ -224,9 +224,7 @@ class IncidentServiceImplTest {
 
     }
 
-    // =====================================================
     // FIND BY CATEGORY
-    // =====================================================
     //
     // @Test
     void findAllByCategory_shouldReturnIncidents() {
@@ -254,9 +252,7 @@ class IncidentServiceImplTest {
 
     }
 
-    // =====================================================
     // CREATE INCIDENT
-    // =====================================================
 
     @Test
     void create_shouldCreateIncidentSuccessfully() {
