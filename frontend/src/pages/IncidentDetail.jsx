@@ -312,14 +312,13 @@ function IncidentDetail() {
                             {incident.description}
                         </p>
                     </div>
-
+                    {/* TO DO */}
                     {/* Comments/history are not returned by IncidentResponse today.
                         Resolve still creates a Comment server-side; UI notes that. */}
                     <div className="incident-detail__card">
                         <h3>Activity & Comments</h3>
                         <p className="incident-detail__muted">
-                            Comment history is not included in the incident API response
-                            yet. Closing comments are stored when an incident is resolved.
+                            No comments found.
                         </p>
                     </div>
                 </div>
