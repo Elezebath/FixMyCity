@@ -64,6 +64,25 @@ jobs:
           echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
           echo "server_port=$PORT_INPUT" >> $GITHUB_OUTPUT
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ""
+        run: |
+          npm ci
+          npm run build
+
+      - name: Copy frontend build into Spring static resources
+        run: |
+          rm -rf src/main/resources/static
+          mkdir -p src/main/resources/static
+          cp -r frontend/dist/* src/main/resources/static/   
+
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
@@ -78,6 +97,15 @@ jobs:
           DB_NAME=fixmycity
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
           SERVER_PORT=${SERVER_PORT}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION_MS=3600000
+          SMTP_HOST=smtp.gmail.com
+          SMTP_PORT=587
+          SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM=${{ secrets.SMTP_FROM }}
+          FRONTEND_RESET_PASSWORD_URL=https://team1.acnbootcamp.lv/reset-password
+          PASSWORD_RESET_EXPIRATION_MINUTES=30
           EOF
 
       - name: Stop existing stack (if running)
@@ -88,7 +116,7 @@ jobs:
         run: docker compose config > docker-compose.resolved.yml
 
       - name: Build and start stack
-        run: docker compose -f docker-compose.resolved.yml up -d --build
+        run: docker compose -f docker-compose.resolved.yml up -d --build app mysql
 
       - name: Verify deployment
         env:
