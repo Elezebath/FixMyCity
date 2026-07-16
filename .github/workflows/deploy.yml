@@ -81,10 +81,20 @@ jobs:
         run: |
           rm -rf src/main/resources/static
           mkdir -p src/main/resources/static
-          cp -r frontend/dist/* src/main/resources/static/   
+          cp -r frontend/dist/* src/main/resources/static/
+
+      - name: Verify copied frontend
+        run: |
+          echo "===== STATIC DIRECTORY ====="
+          ls -R src/main/resources/static
 
       - name: Build with Maven
         run: mvn clean package -DskipTests
+
+      - name: Verify packaged frontend
+        run: |
+          echo "===== JAR CONTENTS ====="
+          jar tf target/*.jar | grep BOOT-INF/classes/static || true
 
       - name: Check Docker availability
         run: docker compose version
