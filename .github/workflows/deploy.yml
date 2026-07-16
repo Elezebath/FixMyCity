@@ -143,12 +143,6 @@ jobs:
           docker compose -f docker-compose.resolved.yml logs app || true
           exit 1
 
-      - name: Query database
-        continue-on-error: true
-        run: |
-            docker exec fixmycity-mysql-1 mysql -u root -p"${{ secrets.DB_PASSWORD }}" \
-              -e "SELECT * FROM users;" fixmycity
-
       - name: Display application logs
         if: always()
         run: docker compose logs --tail 50 app || true

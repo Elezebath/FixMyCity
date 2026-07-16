@@ -7,6 +7,6 @@ package lv.acnbootcamp.fixmycity.entity;
 public enum Role {
     CITIZEN,
     MANAGER,
-    EMPLOYEE,
+    COMPANY,
     ADMIN
 }
