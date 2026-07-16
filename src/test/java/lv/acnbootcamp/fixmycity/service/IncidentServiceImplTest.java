@@ -3,7 +3,6 @@ package lv.acnbootcamp.fixmycity.service;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.entity.*;
-import lv.acnbootcamp.fixmycity.exception.*;
 import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
 import lv.acnbootcamp.fixmycity.exception.incident.IncidentNotFoundException;
 import lv.acnbootcamp.fixmycity.exception.incident.InvalidIncidentException;
@@ -19,7 +18,6 @@ import lv.acnbootcamp.fixmycity.service.impl.IncidentServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -27,8 +25,6 @@ import java.util.Optional;
 
 import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
-import lv.acnbootcamp.fixmycity.entity.*;
-import lv.acnbootcamp.fixmycity.exception.*;
 import lv.acnbootcamp.fixmycity.repository.*;
 import org.junit.jupiter.api.Nested;
 import org.mockito.InjectMocks;

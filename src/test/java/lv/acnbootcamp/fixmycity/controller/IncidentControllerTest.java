@@ -6,7 +6,6 @@ import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.entity.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.IncidentStatus;
-import lv.acnbootcamp.fixmycity.exception.*;
 import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
 import lv.acnbootcamp.fixmycity.exception.incident.*;
 import lv.acnbootcamp.fixmycity.exception.user.CompanyNotFoundException;

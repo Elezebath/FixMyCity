@@ -28,8 +28,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.beans.PropertyEditorSupport;
 import java.util.List;
 
 @RestController
@@ -45,6 +48,23 @@ public class IncidentController {
 
     private final IncidentService incidentService;
     private final UserRepository userRepository;
+
+    /**
+     * Swagger UI (and some HTML forms) submit an empty string for a file
+     * input that was left empty, instead of omitting the part entirely.
+     * Spring has no built-in String -> MultipartFile converter, so without
+     * this it fails with a 400 "Failed to convert property value" error.
+     * This editor treats an empty/blank string as "no file provided".
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(MultipartFile.class, new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) {
+                setValue(null);
+            }
+        });
+    }
 
     @GetMapping
     @Operation(

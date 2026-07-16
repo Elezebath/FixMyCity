@@ -5,6 +5,12 @@ spring:
   application:
     name: fixmycity
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+      file-size-threshold: 2KB
+
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:fixmycity}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USERNAME:root}

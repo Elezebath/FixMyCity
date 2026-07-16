@@ -30,7 +30,7 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    private final String ERROR = "error";
+    private static final String ERROR = "error";
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<Map<String, String>> handleEmailExists(EmailAlreadyExistsException ex) {
@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(UserNotFoundException ex) {
         Map<String, String> body = new HashMap<>();
-        body.put("error", ex.getMessage());
+        body.put(ERROR, ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
