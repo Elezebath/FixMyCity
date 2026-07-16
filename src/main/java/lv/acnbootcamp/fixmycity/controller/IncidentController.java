@@ -16,7 +16,6 @@ import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.entity.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.IncidentStatus;
-import lv.acnbootcamp.fixmycity.entity.Role;
 import lv.acnbootcamp.fixmycity.entity.User;
 import lv.acnbootcamp.fixmycity.exception.UnauthorizedException;
 import lv.acnbootcamp.fixmycity.repository.UserRepository;
@@ -25,10 +24,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 import java.util.List;
 
@@ -129,12 +126,6 @@ public class IncidentController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @RequestBody(
-            content = @Content(
-                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                    schema = @Schema(implementation = CreateIncidentRequest.class)
-            )
-    )
     @ResponseStatus(HttpStatus.CREATED)
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyRole('CITIZEN', 'MANAGER', 'ADMIN')")
@@ -181,11 +172,6 @@ public class IncidentController {
         String email = authentication.getName();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("User not found with email: " + email));
-
-        // Validate that the user has CITIZEN role (only citizens can create incidents)
-        if (user.getRole() != Role.CITIZEN) {
-            throw new UnauthorizedException("Only citizens can create incidents");
-        }
 
         return incidentService.create(request, user.getId());
     }

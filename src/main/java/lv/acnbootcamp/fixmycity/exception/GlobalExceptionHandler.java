@@ -209,7 +209,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Returns 401 when user is unauthorized (e.g., non-citizen trying to create incident).
+     * Returns 401 when user is unauthorized.
      */
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<Map<String, String>> handleUnauthorized(UnauthorizedException ex) {

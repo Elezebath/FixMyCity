@@ -22,6 +22,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -475,6 +476,7 @@ class IncidentControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
         @DisplayName("Should create incident without attachment")
         void shouldCreateIncidentWithoutAttachment() throws Exception {
             setupUserMock("testuser@test.com", testCitizen);
@@ -485,8 +487,7 @@ class IncidentControllerTest {
                             .param("categoryId", "1")
                             .param("title", "Broken Street Light")
                             .param("description", "The street light is not working")
-                            .param("locationAddress", "Brivibas Street 12, Riga")
-                            .with(user("testuser").roles("CITIZEN")))
+                            .param("locationAddress", "Brivibas Street 12, Riga"))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.incidentId").value(100));
 
@@ -494,6 +495,7 @@ class IncidentControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
         @DisplayName("Should create incident with attachment")
         void shouldCreateIncidentWithAttachment() throws Exception {
             MockMultipartFile attachmentFile = new MockMultipartFile(
@@ -512,8 +514,7 @@ class IncidentControllerTest {
                             .param("title", "Broken Street Light")
                             .param("description", "The street light is not working")
                             .param("locationAddress", "Brivibas Street 12, Riga")
-                            .file(attachmentFile)
-                            .with(user("testuser").roles("CITIZEN")))
+                            .file(attachmentFile))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.incidentId").value(100))
                     .andExpect(jsonPath("$.attachment").exists())
@@ -644,6 +645,7 @@ class IncidentControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "citizen@test.com", roles = "CITIZEN")
         @DisplayName("Should create incident with CITIZEN role")
         void shouldCreateIncidentWithCitizenRole() throws Exception {
             User citizenUser = User.builder()
@@ -659,8 +661,7 @@ class IncidentControllerTest {
                             .param("categoryId", "1")
                             .param("title", "Title")
                             .param("description", "Description")
-                            .param("locationAddress", "Address")
-                            .with(user("citizen").roles("CITIZEN")))
+                            .param("locationAddress", "Address"))
                     .andExpect(status().isCreated());
 
             verify(incidentService).create(any(CreateIncidentRequest.class), eq(10L));
@@ -709,6 +710,7 @@ class IncidentControllerTest {
         }
 
         @Test
+        @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
         @DisplayName("Should return 404 when category not found")
         void shouldReturn404WhenCategoryNotFound() throws Exception {
             setupUserMock("testuser@test.com", testCitizen);
@@ -719,8 +721,7 @@ class IncidentControllerTest {
                             .param("categoryId", "999")
                             .param("title", "Title")
                             .param("description", "Description")
-                            .param("locationAddress", "Address")
-                            .with(user("testuser").roles("CITIZEN")))
+                            .param("locationAddress", "Address"))
                     .andExpect(status().isNotFound());
         }
 

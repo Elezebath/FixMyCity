@@ -1,5 +1,6 @@
 package lv.acnbootcamp.fixmycity.dto.incident;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -50,11 +51,10 @@ public class CreateIncidentRequest {
     )
     private String locationAddress;
 
-    @Schema(
-            description = "Optional attachment file (image or PDF, max 5MB). Can be omitted.",
-            requiredMode = Schema.RequiredMode.NOT_REQUIRED,
-            type = "string",
-            format = "binary"
+    @Parameter(
+            description = "Optional attachment (image or PDF)",
+            required = false
     )
+    @Schema(type = "string", format = "binary")
     private MultipartFile attachment;
 }
