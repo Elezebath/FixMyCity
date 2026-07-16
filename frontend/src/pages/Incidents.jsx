@@ -21,7 +21,7 @@ function StatusBadge({ status }) {
 
 function Incidents() {
     const navigate = useNavigate();
-    const canReport = isCitizen();
+    const canReport = isCitizen() || isManagerOrAdmin();
 
     const [incidents, setIncidents] = useState([]);
     const [loading, setLoading] = useState(true);
