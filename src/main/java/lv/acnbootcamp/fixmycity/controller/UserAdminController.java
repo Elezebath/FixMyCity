@@ -103,7 +103,7 @@ public class UserAdminController {
     @PatchMapping("/{id}/role")
     @Operation(
             summary = "Change a user's role",
-            description = "Updates the role assigned to a user (CITIZEN, MANAGER, EMPLOYEE, ADMIN). Requires ADMIN role."
+            description = "Updates the role assigned to a user (CITIZEN, MANAGER, COMPANY, ADMIN). Requires ADMIN role."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Role updated successfully"),
