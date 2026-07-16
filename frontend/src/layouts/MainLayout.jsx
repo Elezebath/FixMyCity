@@ -1,17 +1,22 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { getCurrentUser, hasRole, clearAuth } from '../utils/auth';
 import './MainLayout.css';
-
-const NAV_ITEMS = [
-    { to: '/app/dashboard', label: 'Dashboard', icon: '📊' },
-    { to: '/app/incidents', label: 'Incidents', icon: '📋' },
-    { to: '/app/report', label: 'Report Issue', icon: '➕' },
-];
 
 function MainLayout() {
     const navigate = useNavigate();
 
-    const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
-    const user = storedUser || { fullName: '', role: '' };
+    const user = getCurrentUser() || { fullName: '', role: '' };
+
+    const navItems = [
+        { to: '/app/dashboard', label: 'Dashboard', icon: '📊' },
+        { to: '/app/incidents', label: 'Incidents', icon: '📋' },
+        // Report is primarily for citizens (managers/admins can also create via API)
+        ...(hasRole('CITIZEN', 'MANAGER', 'ADMIN')
+            ? [{ to: '/app/incidents/new', label: 'Report Issue', icon: '➕' }]
+            : []),
+
+    ];
+
 
     const initials = user.fullName
         ? user.fullName
@@ -24,11 +29,10 @@ function MainLayout() {
         : '?';
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('tokenType');
-        localStorage.removeItem('user');
+        clearAuth();
         navigate('/');
     };
+
 
     return (
         <div className="layout">
@@ -39,7 +43,8 @@ function MainLayout() {
                 </div>
 
                 <nav className="sidebar__nav">
-                    {NAV_ITEMS.map((item) => (
+                    {navItems.map((item) => (
+
                         <NavLink
                             key={item.to}
                             to={item.to}

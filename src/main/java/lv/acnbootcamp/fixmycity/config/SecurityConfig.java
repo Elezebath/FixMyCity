@@ -106,11 +106,14 @@ public class SecurityConfig {
                                 "/api/auth/reset-password"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/incidents/**").permitAll()
+                        // Citizen-accessible category list for the create-incident form
+                        .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/assign").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/resolve").hasAnyRole("COMPANY", "MANAGER")
                         .requestMatchers("/api/incidents/**").hasAnyRole("CITIZEN", "MANAGER", "ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
+
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
