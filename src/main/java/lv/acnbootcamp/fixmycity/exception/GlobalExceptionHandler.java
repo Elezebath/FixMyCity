@@ -1,7 +1,17 @@
 package lv.acnbootcamp.fixmycity.exception;
 
-import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import lv.acnbootcamp.fixmycity.exception.category.CategoryAlreadyExistsException;
+import lv.acnbootcamp.fixmycity.exception.category.CategoryInUseException;
+import lv.acnbootcamp.fixmycity.exception.incident.IncidentNotFoundException;
+import lv.acnbootcamp.fixmycity.exception.incident.InvalidIncidentException;
+import lv.acnbootcamp.fixmycity.exception.incident.InvalidPriorityException;
+import lv.acnbootcamp.fixmycity.exception.incident.InvalidStatusException;
+import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
+import lv.acnbootcamp.fixmycity.exception.user.CompanyNotFoundException;
+import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
+import lv.acnbootcamp.fixmycity.exception.user.UserNotFoundException;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -9,8 +19,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -147,34 +159,23 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Returns 400 when file type is invalid.
+     * Returns 409 when creating/renaming a category to a name that already exists.
      */
-    @ExceptionHandler(InvalidFileTypeException.class)
-    public ResponseEntity<Map<String, String>> handleInvalidFileType(InvalidFileTypeException ex) {
+    @ExceptionHandler(CategoryAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleCategoryAlreadyExists(@NonNull CategoryAlreadyExistsException ex) {
         Map<String, String> body = new HashMap<>();
         body.put(ERROR, ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body); // 400
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body); // 409
     }
 
     /**
-     * Returns 400 when file is too large.
+     * Returns 409 when attempting to delete a category still referenced by incidents.
      */
-    @ExceptionHandler(FileTooLargeException.class)
-    public ResponseEntity<Map<String, String>> handleFileTooLarge(FileTooLargeException ex) {
+    @ExceptionHandler(CategoryInUseException.class)
+    public ResponseEntity<Map<String, String>> handleCategoryInUse(CategoryInUseException ex) {
         Map<String, String> body = new HashMap<>();
         body.put(ERROR, ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body); // 400
-    }
-
-    /**
-     * Returns 500 when file storage operation fails.
-     */
-    @ExceptionHandler(FileStorageException.class)
-    public ResponseEntity<Map<String, String>> handleFileStorageException(FileStorageException ex) {
-        log.error("File storage error", ex);
-        Map<String, String> body = new HashMap<>();
-        body.put(ERROR, ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body); // 500
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body); // 409
     }
 
     @ExceptionHandler(Exception.class)
@@ -188,12 +189,51 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNoResourceFound(NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Resource not found"));
+    }
+
+    /**
+     * Returns 400 when file type is invalid.
+     */
+    @ExceptionHandler(InvalidFileTypeException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidFileType(InvalidFileTypeException ex) {
+        Map<String, String> body = new HashMap<>();
+        body.put(ERROR, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    /**
+     * Returns 400 when file is too large.
+     */
+    @ExceptionHandler(FileTooLargeException.class)
+    public ResponseEntity<Map<String, String>> handleFileTooLarge(FileTooLargeException ex) {
+        Map<String, String> body = new HashMap<>();
+        body.put(ERROR, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    /**
+     * Returns 500 when file storage operation fails.
+     */
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<Map<String, String>> handleFileStorageException(FileStorageException ex) {
+        log.error("File storage error", ex);
+
+        Map<String, String> body = new HashMap<>();
+        body.put(ERROR, ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<Map<String, String>> handleHandlerValidation(
             HandlerMethodValidationException ex) {
 
         Map<String, String> body = new HashMap<>();
-        body.put("error", "Invalid request parameter");
+        body.put(ERROR, "Invalid request parameter");
 
         return ResponseEntity.badRequest().body(body);
     }
@@ -203,7 +243,7 @@ public class GlobalExceptionHandler {
             ConstraintViolationException ex) {
 
         Map<String, String> body = new HashMap<>();
-        body.put("error", ex.getMessage());
+        body.put(ERROR, ex.getMessage());
 
         return ResponseEntity.badRequest().body(body);
     }
@@ -215,6 +255,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleUnauthorized(UnauthorizedException ex) {
         Map<String, String> body = new HashMap<>();
         body.put(ERROR, ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body); // 401
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 }

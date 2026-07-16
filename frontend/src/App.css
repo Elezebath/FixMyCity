@@ -1,0 +1,75 @@
+.incidents-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.incidents-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.incidents-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+  color: #334155;
+  vertical-align: top;
+}
+
+.incidents-table tr:last-child td {
+  border-bottom: none;
+}
+
+.incidents-table__id {
+  color: #64748b;
+}
+
+.incidents-table__title {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.incidents-table__location {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.incidents-table__reported {
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge--open {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.badge--assigned {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badge--progress {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.badge--resolved {
+  background: #dcfce7;
+  color: #16a34a;
+}
