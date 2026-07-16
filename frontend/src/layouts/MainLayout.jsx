@@ -1,11 +1,12 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import './MainLayout.css';
 
-const NAV_ITEMS = [
+const ALL_NAV_ITEMS = [
     { to: '/app/dashboard', label: 'Dashboard', icon: '📊' },
     { to: '/app/incidents', label: 'Incidents', icon: '📋' },
     { to: '/app/report', label: 'Report Issue', icon: '➕' },
     { to: '/app/assignment', label: 'Assignment', icon: '🗂', roles: ['MANAGER', 'ADMIN'] },
+    { to: '/app/admin/users', label: 'User Administration', icon: '🛡️', roles: ['ADMIN'] },
 ];
 
 function MainLayout() {
@@ -14,7 +15,7 @@ function MainLayout() {
     const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
     const user = storedUser || { fullName: '', role: '' };
 
-    const visibleNavItems = NAV_ITEMS.filter(
+    const visibleNavItems = ALL_NAV_ITEMS.filter(
         (item) => !item.roles || item.roles.includes(user.role)
     );
 
