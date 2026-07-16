@@ -64,7 +64,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
-                "http://localhost:3150"
+                "http://localhost:3150",
+                "https://team1.acnbootcamp.lv"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
@@ -104,8 +105,10 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password",
-                                // Public static serving of incident attachments
                                 "/uploads/**"
+                                "/index.html",
+                                "/assets/**",
+                                "/app/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/incidents/**").permitAll()

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './Login.css';
 
 
@@ -148,6 +148,12 @@ function Login() {
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                             </label>
+
+                            <div className="forgot-password-link">
+                                <Link to="/forgot-password">
+                                    Forgot password?
+                                </Link>
+                            </div>
 
                             <button type="submit" className="login-submit">
                                 Sign in
