@@ -1,7 +1,9 @@
 package lv.acnbootcamp.fixmycity.service;
 
+import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
+import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
 import lv.acnbootcamp.fixmycity.entity.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.IncidentStatus;
 
@@ -16,5 +18,7 @@ public interface IncidentService {
     List<IncidentResponse> findAllByCompany(Long companyId);
     List<IncidentResponse> findAllByCitizen(Long citizenId);
     List<IncidentResponse> findAllByStatus(IncidentStatus status);
+    IncidentResponse assignToCompany(Long incidentId, AssignIncidentRequest request);
+    IncidentResponse resolveByCompany(Long incidentId, ResolveIncidentRequest request, String resolvedByEmail);
 }
 
