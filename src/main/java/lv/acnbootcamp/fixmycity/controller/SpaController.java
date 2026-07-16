@@ -14,7 +14,9 @@ public class SpaController {
     @RequestMapping(value = {
             "/",
             "/app",
-            "/app/**"
+            "/app/**",
+            "/forgot-password",
+            "/reset-password"
     })
     public String forward() {
         return "forward:/index.html";
