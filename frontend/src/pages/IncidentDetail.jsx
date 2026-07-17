@@ -50,10 +50,7 @@ function IncidentDetail() {
     const [notFound, setNotFound] = useState(false);
     const [toast, setToast] = useState('');
 
-    const [assignOpen, setAssignOpen] = useState(false);
     const [companyId, setCompanyId] = useState('');
-    const [assignError, setAssignError] = useState('');
-    const [assigning, setAssigning] = useState(false);
 
     const [resolveOpen, setResolveOpen] = useState(false);
     const [comment, setComment] = useState('');
@@ -244,18 +241,6 @@ function IncidentDetail() {
                 </div>
 
                 <div className="incident-detail__actions">
-                    {showAssign && (
-                        <button
-                            type="button"
-                            className="incident-detail__btn incident-detail__btn--primary"
-                            onClick={() => {
-                                setAssignError('');
-                                setAssignOpen(true);
-                            }}
-                        >
-                            Assign to Company
-                        </button>
-                    )}
                     {showResolve && (
                         <button
                             type="button"
@@ -355,56 +340,6 @@ function IncidentDetail() {
                     </dl>
                 </aside>
             </div>
-
-            {assignOpen && (
-                <Modal
-                    title="Assign to Company"
-                    onClose={() => !assigning && setAssignOpen(false)}
-                >
-                    <form onSubmit={handleAssign} className="modal-form">
-                        <p className="modal-form__hint">
-                            {/* No public company list endpoint exists yet — managers enter company ID. */}
-                            Enter the company ID to assign this incident. There is no
-                            company list API yet.
-                        </p>
-                        <label className="modal-form__field">
-                            Company ID
-                            <input
-                                type="number"
-                                min={1}
-                                step={1}
-                                value={companyId}
-                                onChange={(e) => setCompanyId(e.target.value)}
-                                placeholder="e.g. 1"
-                                disabled={assigning}
-                                autoFocus
-                            />
-                        </label>
-                        {assignError && (
-                            <p className="modal-form__error" role="alert">
-                                {assignError}
-                            </p>
-                        )}
-                        <div className="modal-form__actions">
-                            <button
-                                type="button"
-                                className="incident-detail__btn"
-                                onClick={() => setAssignOpen(false)}
-                                disabled={assigning}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="incident-detail__btn incident-detail__btn--primary"
-                                disabled={assigning || !companyId}
-                            >
-                                {assigning ? 'Assigning…' : 'Confirm assign'}
-                            </button>
-                        </div>
-                    </form>
-                </Modal>
-            )}
 
             {resolveOpen && (
                 <Modal
