@@ -73,3 +73,13 @@
   background: #dcfce7;
   color: #16a34a;
 }
+
+.badge--rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge--closed {
+  background: #e2e8f0;
+  color: #475569;
+}

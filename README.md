@@ -1,6 +1,6 @@
 # FixMyCity
 
-Civic incident tracking system with role-based access (Citizen, Manager, Employee, Admin), allowing citizens to report infrastructure issues and track their resolution.
+Civic incident tracking system with role-based access (Citizen, Manager, Company, Admin), allowing citizens to report infrastructure issues and track their resolution.
 
 ## Tech Stack
 
@@ -37,7 +37,7 @@ FixMyCity
 │   │   └── UserRepository.java    # Spring Data JPA repository for User
 │   ├── entity/
 │   │   ├── User.java              # User JPA entity (maps to "users" table)
-│   │   └── Role.java              # Enum: CITIZEN, MANAGER, EMPLOYEE, ADMIN
+│   │   └── Role.java              # Enum: CITIZEN, MANAGER, COMPANY, ADMIN
 │   ├── dto/
 │   │   ├── RegisterRequest.java   # Registration request payload (validated)
 │   │   └── UserResponse.java      # Registration response (excludes password)

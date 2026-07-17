@@ -124,3 +124,13 @@
 .report-btn--primary:hover {
     background: #1d4ed8;
 }
+
+.report-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.report-btn--primary:disabled:hover {
+    background: #2563eb;
+}
+

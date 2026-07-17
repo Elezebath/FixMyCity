@@ -33,6 +33,7 @@ function App() {
                     />
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="incidents" element={<Incidents />} />
+                    <Route path="incidents/new" element={<ReportIssue />} />
                     <Route path="incidents/:id" element={<IncidentDetail />} />
                     <Route path="report" element={<ReportIssue />} />
                     <Route path="assignment" element={
