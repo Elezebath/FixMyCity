@@ -43,7 +43,7 @@ public class User {
     private String fullName;
 
     @Enumerated(EnumType.STRING) // stores role as "CITIZEN" etc., not as an ordinal number
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "VARCHAR(50)")
     private Role role;
 
     @Column(nullable = false)
