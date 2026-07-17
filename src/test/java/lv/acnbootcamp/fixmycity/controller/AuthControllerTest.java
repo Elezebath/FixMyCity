@@ -47,6 +47,7 @@ class AuthControllerTest {
 
     @Test
     void register_returns201_whenRequestIsValid() throws Exception {
+        // Role is server-assigned (always CITIZEN on self-registration), not client-selectable.
         var response = new UserResponse(1L, "new@example.com", "New User", Role.CITIZEN);
         when(authService.register(any())).thenReturn(response);
 
@@ -54,8 +55,7 @@ class AuthControllerTest {
                 {
                   "email": "new@example.com",
                   "password": "password123",
-                  "fullName": "New User",
-                  "role": "CITIZEN"
+                  "fullName": "New User"
                 }
                 """;
 
@@ -74,8 +74,7 @@ class AuthControllerTest {
                 {
                   "email": "",
                   "password": "password123",
-                  "fullName": "New User",
-                  "role": "CITIZEN"
+                  "fullName": "New User"
                 }
                 """;
 
@@ -94,8 +93,7 @@ class AuthControllerTest {
                 {
                   "email": "dup@example.com",
                   "password": "password123",
-                  "fullName": "Dup User",
-                  "role": "CITIZEN"
+                  "fullName": "Dup User"
                 }
                 """;
 
