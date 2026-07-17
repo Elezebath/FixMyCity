@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { normalizeIncident } from '../utils/incidentHelpers';
 import './Assignment.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
@@ -41,8 +42,9 @@ export default function Assignment() {
 
             const incidentsData = await incidentsRes.json();
             const companiesData = await companiesRes.json();
+            const rawIncidents = incidentsData.content ?? incidentsData;
 
-            setIncidents(incidentsData.content ?? incidentsData);
+            setIncidents(rawIncidents.map(normalizeIncident));
             setCompanies(companiesData.content ?? companiesData);
         } catch (err) {
             setError(err.message);
@@ -124,7 +126,7 @@ export default function Assignment() {
                         <tr key={incident.id}>
                             <td>{incident.id}</td>
                             <td>{incident.category}</td>
-                            <td>{incident.location}</td>
+                            <td>{incident.address}</td>
                             <td>{new Date(incident.createdAt).toLocaleDateString()}</td>
                             <td>
                                 <button onClick={() => openAssignModal(incident)}>
