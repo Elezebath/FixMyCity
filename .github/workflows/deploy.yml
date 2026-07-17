@@ -81,10 +81,20 @@ jobs:
         run: |
           rm -rf src/main/resources/static
           mkdir -p src/main/resources/static
-          cp -r frontend/dist/* src/main/resources/static/   
+          cp -r frontend/dist/* src/main/resources/static/
+
+      - name: Verify copied frontend
+        run: |
+          echo "===== STATIC DIRECTORY ====="
+          ls -R src/main/resources/static
 
       - name: Build with Maven
         run: mvn clean package -DskipTests
+
+      - name: Verify packaged frontend
+        run: |
+          echo "===== JAR CONTENTS ====="
+          jar tf target/*.jar | grep BOOT-INF/classes/static || true
 
       - name: Check Docker availability
         run: docker compose version
@@ -104,7 +114,7 @@ jobs:
           SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
           SMTP_FROM=${{ secrets.SMTP_FROM }}
-          FRONTEND_RESET_PASSWORD_URL=https://team1.acnbootcamp.lv/reset-password
+          FRONTEND_RESET_PASSWORD_URL=https://team1.acnbootcamp.lv/forgot-password
           PASSWORD_RESET_EXPIRATION_MINUTES=30
           EOF
 

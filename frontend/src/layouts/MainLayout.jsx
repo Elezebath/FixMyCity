@@ -2,6 +2,14 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { getCurrentUser, hasRole, clearAuth } from '../utils/auth';
 import './MainLayout.css';
 
+const ALL_NAV_ITEMS = [
+    { to: '/app/dashboard', label: 'Dashboard', icon: '📊' },
+    { to: '/app/incidents', label: 'Incidents', icon: '📋' },
+    { to: '/app/report', label: 'Report Issue', icon: '➕' },
+    { to: '/app/assignment', label: 'Assignment', icon: '🗂', roles: ['MANAGER', 'ADMIN'] },
+    { to: '/app/admin/users', label: 'User Administration', icon: '🛡️', roles: ['ADMIN'] },
+];
+
 function MainLayout() {
     const navigate = useNavigate();
 
@@ -17,6 +25,9 @@ function MainLayout() {
 
     ];
 
+    const visibleNavItems = ALL_NAV_ITEMS.filter(
+        (item) => !item.roles || item.roles.includes(user.role)
+    );
 
     const initials = user.fullName
         ? user.fullName
