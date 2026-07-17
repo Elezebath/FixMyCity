@@ -1,36 +1,109 @@
 .assignment-page {
     padding: 24px;
+    font-family: 'Inter', sans-serif;
 }
 
 .assignment-page h1 {
-    margin-bottom: 16px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 20px;
 }
 
 .assignment-error {
-    color: #d32f2f;
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 1rem;
 }
 
+/* Table — matches incidents-table / admin-users-table styling */
 .assignment-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
 }
 
-.assignment-table th,
-.assignment-table td {
+.assignment-table th {
     text-align: left;
-    padding: 10px 12px;
-    border-bottom: 1px solid #e0e0e0;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+    font-weight: 600;
+    padding: 10px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-.assignment-table button {
-    padding: 6px 12px;
+.assignment-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.assignment-table tr:last-child td {
+    border-bottom: none;
+}
+
+.assignment-table tr:hover td {
+    background: #fafbfd;
+}
+
+.assignment-table__id {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.assignment-table__category {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.assignment-table__location {
+    color: #64748b;
+}
+
+.assignment-table__date {
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+/* Assign button — small primary action, matches action-btn pattern */
+.assign-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #2563eb;
     cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
 }
 
+.assign-btn:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+
+/* Modal — matches admin-modal styling */
 .assignment-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(15, 23, 42, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -39,33 +112,91 @@
 
 .assignment-modal {
     background: #fff;
-    border-radius: 8px;
-    padding: 24px;
-    width: 360px;
+    border-radius: 12px;
+    padding: 1.75rem;
+    width: 380px;
     max-width: 90vw;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    font-family: 'Inter', sans-serif;
 }
 
 .assignment-modal h2 {
-    margin-bottom: 16px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 1.25rem;
 }
 
 .assignment-modal form label {
     display: block;
-    margin-bottom: 14px;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.9rem;
 }
 
 .assignment-modal select,
 .assignment-modal input {
+    display: block;
     width: 100%;
-    margin-top: 6px;
-    padding: 8px;
+    margin-top: 5px;
+    padding: 9px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
     box-sizing: border-box;
+}
+
+.assignment-modal select:focus,
+.assignment-modal input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px #eff6ff;
 }
 
 .assignment-modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
+    gap: 8px;
+    margin-top: 1.25rem;
+}
+
+.assignment-modal-actions button[type="button"] {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.assignment-modal-actions button[type="button"]:hover {
+    background: #f8fafc;
+}
+
+.assignment-modal-actions button[type="submit"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.assignment-modal-actions button[type="submit"]:hover {
+    background: #1d4ed8;
+}
+
+.assignment-modal-actions button[type="submit"]:disabled {
+    background: #93c5fd;
+    cursor: not-allowed;
 }
