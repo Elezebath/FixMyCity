@@ -1,7 +1,7 @@
 package lv.acnbootcamp.fixmycity.util;
 
-import lv.acnbootcamp.fixmycity.entity.Attachment;
-import lv.acnbootcamp.fixmycity.entity.Incident;
+import lv.acnbootcamp.fixmycity.entity.incident.Attachment;
+import lv.acnbootcamp.fixmycity.entity.incident.Incident;
 
 import java.time.LocalDateTime;
 

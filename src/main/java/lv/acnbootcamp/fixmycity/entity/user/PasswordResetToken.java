@@ -1,4 +1,4 @@
-package lv.acnbootcamp.fixmycity.entity;
+package lv.acnbootcamp.fixmycity.entity.user;
 
 import jakarta.persistence.*;
 import lombok.*;

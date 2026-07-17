@@ -2,9 +2,9 @@ package lv.acnbootcamp.fixmycity.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import lv.acnbootcamp.fixmycity.dto.audit.AuditLogResponse;
-import lv.acnbootcamp.fixmycity.entity.AuditAction;
-import lv.acnbootcamp.fixmycity.entity.AuditEntityType;
-import lv.acnbootcamp.fixmycity.entity.AuditLog;
+import lv.acnbootcamp.fixmycity.entity.audit.AuditAction;
+import lv.acnbootcamp.fixmycity.entity.audit.AuditEntityType;
+import lv.acnbootcamp.fixmycity.entity.audit.AuditLog;
 import lv.acnbootcamp.fixmycity.repository.AuditLogRepository;
 import lv.acnbootcamp.fixmycity.service.AuditLogService;
 import org.springframework.security.core.context.SecurityContextHolder;

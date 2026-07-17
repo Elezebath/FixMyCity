@@ -1,6 +1,6 @@
 package lv.acnbootcamp.fixmycity.dto.auth;
 
-import lv.acnbootcamp.fixmycity.entity.Role;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
 
 /**
  * Response returned after successful authentication.

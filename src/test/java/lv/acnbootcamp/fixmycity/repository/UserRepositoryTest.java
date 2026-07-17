@@ -1,7 +1,7 @@
 package lv.acnbootcamp.fixmycity.repository;
 
-import lv.acnbootcamp.fixmycity.entity.Role;
-import lv.acnbootcamp.fixmycity.entity.User;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
+import lv.acnbootcamp.fixmycity.entity.user.User;
 import lv.acnbootcamp.fixmycity.util.UserTestDataBuilder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

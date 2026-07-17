@@ -1,6 +1,6 @@
 package lv.acnbootcamp.fixmycity.dto.user;
 
-import lv.acnbootcamp.fixmycity.entity.Role;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

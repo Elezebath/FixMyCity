@@ -1,8 +1,8 @@
 package lv.acnbootcamp.fixmycity.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import lv.acnbootcamp.fixmycity.entity.PasswordResetToken;
-import lv.acnbootcamp.fixmycity.entity.User;
+import lv.acnbootcamp.fixmycity.entity.user.PasswordResetToken;
+import lv.acnbootcamp.fixmycity.entity.user.User;
 import lv.acnbootcamp.fixmycity.exception.InvalidPasswordResetTokenException;
 import lv.acnbootcamp.fixmycity.repository.PasswordResetTokenRepository;
 import lv.acnbootcamp.fixmycity.repository.UserRepository;

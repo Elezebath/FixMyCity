@@ -1,4 +1,4 @@
-package lv.acnbootcamp.fixmycity.entity;
+package lv.acnbootcamp.fixmycity.entity.user;
 
 // Represents the fixed set of application roles.
 // "Anonymous" is intentionally not included here - it represents

@@ -1,7 +1,7 @@
 package lv.acnbootcamp.fixmycity.dto.user;
 
 import jakarta.validation.constraints.NotNull;
-import lv.acnbootcamp.fixmycity.entity.Role;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
 import lombok.Getter;
 import lombok.Setter;
 

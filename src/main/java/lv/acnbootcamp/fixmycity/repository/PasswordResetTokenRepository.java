@@ -1,7 +1,7 @@
 package lv.acnbootcamp.fixmycity.repository;
 
-import lv.acnbootcamp.fixmycity.entity.PasswordResetToken;
-import lv.acnbootcamp.fixmycity.entity.User;
+import lv.acnbootcamp.fixmycity.entity.user.PasswordResetToken;
+import lv.acnbootcamp.fixmycity.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -4,15 +4,15 @@ import {
     getIncident,
     assignCompany,
     resolveIncident,
-} from '../services/incidentService';
-import { isManagerOrAdmin, isCompany } from '../utils/auth';
+} from '../../services/incidentService.js';
+import { isManagerOrAdmin, isCompany } from '../../utils/auth.js';
 import {
     STATUS_CLASS,
     formatStatus,
     formatDateTime,
     formatRelative,
     normalizeIncident,
-} from '../utils/incidentHelpers';
+} from '../../utils/incidentHelpers.js';
 import './IncidentDetail.css';
 
 function StatusBadge({ status }) {

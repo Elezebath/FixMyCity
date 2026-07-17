@@ -3,8 +3,8 @@ package lv.acnbootcamp.fixmycity.mapper;
 import lombok.extern.slf4j.Slf4j;
 import lv.acnbootcamp.fixmycity.dto.incident.AttachmentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
-import lv.acnbootcamp.fixmycity.entity.Attachment;
-import lv.acnbootcamp.fixmycity.entity.Incident;
+import lv.acnbootcamp.fixmycity.entity.incident.Attachment;
+import lv.acnbootcamp.fixmycity.entity.incident.Incident;
 import org.springframework.stereotype.Component;
 
 @Slf4j

@@ -1,14 +1,14 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getIncidents } from '../services/incidentService';
-import { isCitizen, isManagerOrAdmin } from '../utils/auth';
+import { getIncidents } from '../../services/incidentService.js';
+import { isCitizen, isManagerOrAdmin } from '../../utils/auth.js';
 import {
     INCIDENT_STATUSES,
     STATUS_CLASS,
     formatStatus,
     formatRelative,
     normalizeIncident,
-} from '../utils/incidentHelpers';
+} from '../../utils/incidentHelpers.js';
 import './Incidents.css';
 
 function StatusBadge({ status }) {

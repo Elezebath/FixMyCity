@@ -1,6 +1,12 @@
 package lv.acnbootcamp.fixmycity.repository;
 
 import lv.acnbootcamp.fixmycity.entity.*;
+import lv.acnbootcamp.fixmycity.entity.incident.Attachment;
+import lv.acnbootcamp.fixmycity.entity.incident.Incident;
+import lv.acnbootcamp.fixmycity.entity.incident.IncidentPriority;
+import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatus;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
+import lv.acnbootcamp.fixmycity.entity.user.User;
 import lv.acnbootcamp.fixmycity.util.AttachmentTestDataBuilder;
 import lv.acnbootcamp.fixmycity.util.CategoryTestDataBuilder;
 import lv.acnbootcamp.fixmycity.util.IncidentTestDataBuilder;

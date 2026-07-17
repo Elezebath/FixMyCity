@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lv.acnbootcamp.fixmycity.dto.audit.AuditLogResponse;
-import lv.acnbootcamp.fixmycity.entity.AuditEntityType;
+import lv.acnbootcamp.fixmycity.entity.audit.AuditEntityType;
 import lv.acnbootcamp.fixmycity.service.AuditLogService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

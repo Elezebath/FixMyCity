@@ -1,6 +1,8 @@
 package lv.acnbootcamp.fixmycity.util;
 
 import lv.acnbootcamp.fixmycity.entity.*;
+import lv.acnbootcamp.fixmycity.entity.incident.*;
+import lv.acnbootcamp.fixmycity.entity.user.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

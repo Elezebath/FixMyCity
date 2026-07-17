@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createIncident } from '../services/incidentService';
-import { getCategories } from '../services/categoryService';
-import { hasRole } from '../utils/auth';
+import { createIncident } from '../../services/incidentService.js';
+import { getCategories } from '../../services/categoryService.js';
+import { hasRole } from '../../utils/auth.js';
 import {
     ALLOWED_ATTACHMENT_TYPES,
     validateAttachment,
-} from '../utils/incidentHelpers';
+} from '../../utils/incidentHelpers.js';
 import './ReportIssue.css';
 
 function ReportIssue() {

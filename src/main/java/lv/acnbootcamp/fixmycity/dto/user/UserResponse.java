@@ -1,7 +1,7 @@
 package lv.acnbootcamp.fixmycity.dto.user;
 
-import lv.acnbootcamp.fixmycity.entity.Role;
-import lv.acnbootcamp.fixmycity.entity.User;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
+import lv.acnbootcamp.fixmycity.entity.user.User;
 
 // What we send back after registration. Deliberately excludes the password hash.
 public record UserResponse(

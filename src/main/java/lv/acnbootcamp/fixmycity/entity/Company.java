@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lv.acnbootcamp.fixmycity.entity.user.User;
 
 @Entity
 @Table(name = "companies")

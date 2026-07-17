@@ -4,8 +4,8 @@ import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
-import lv.acnbootcamp.fixmycity.entity.IncidentPriority;
-import lv.acnbootcamp.fixmycity.entity.IncidentStatus;
+import lv.acnbootcamp.fixmycity.entity.incident.IncidentPriority;
+import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatus;
 
 import java.util.List;
 

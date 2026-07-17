@@ -1,8 +1,8 @@
 package lv.acnbootcamp.fixmycity.dto.audit;
 
 import lombok.*;
-import lv.acnbootcamp.fixmycity.entity.AuditAction;
-import lv.acnbootcamp.fixmycity.entity.AuditEntityType;
+import lv.acnbootcamp.fixmycity.entity.audit.AuditAction;
+import lv.acnbootcamp.fixmycity.entity.audit.AuditEntityType;
 
 import java.time.LocalDateTime;
 

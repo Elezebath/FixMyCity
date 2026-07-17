@@ -2,17 +2,17 @@ import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import AdminRoute from './components/AdminRoute.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
-import Login from './pages/Login.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import Incidents from './pages/Incidents.jsx';
-import IncidentDetail from './pages/IncidentDetail.jsx';
-import ReportIssue from './pages/ReportIssue.jsx';
+import Login from './pages/auth/Login.jsx';
+import Dashboard from './pages/dashboard/Dashboard.jsx';
+import Incidents from './pages/incidents/Incidents.jsx';
+import IncidentDetail from './pages/incidents/IncidentDetail.jsx';
+import ReportIssue from './pages/incidents/ReportIssue.jsx';
 import AdminUsers from './pages/admin/AdminUsers.jsx';
 import NotFound from './pages/NotFound.jsx';
-import ForgotPassword from './pages/ForgotPassword.jsx';
-import ResetPassword from './pages/ResetPassword.jsx';
+import ForgotPassword from './pages/auth/ForgotPassword.jsx';
+import ResetPassword from './pages/auth/ResetPassword.jsx';
 import './App.css';
-import Assignment from "./pages/Assignment.jsx";
+import Assignment from "./pages/assignment/Assignment.jsx";
 
 function App() {
     return (

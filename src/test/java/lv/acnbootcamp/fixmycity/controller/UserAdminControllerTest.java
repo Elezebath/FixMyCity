@@ -5,7 +5,7 @@ import lv.acnbootcamp.fixmycity.config.SecurityConfig;
 import lv.acnbootcamp.fixmycity.dto.user.UpdateUserRoleRequest;
 import lv.acnbootcamp.fixmycity.dto.user.UpdateUserStatusRequest;
 import lv.acnbootcamp.fixmycity.dto.user.UserAdminResponse;
-import lv.acnbootcamp.fixmycity.entity.Role;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
 import lv.acnbootcamp.fixmycity.exception.user.UserNotFoundException;
 import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import lv.acnbootcamp.fixmycity.service.UserService;

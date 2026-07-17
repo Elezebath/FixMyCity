@@ -1,7 +1,7 @@
 package lv.acnbootcamp.fixmycity.util;
 
-import lv.acnbootcamp.fixmycity.entity.Role;
-import lv.acnbootcamp.fixmycity.entity.User;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
+import lv.acnbootcamp.fixmycity.entity.user.User;
 
 /**
  * Fluent builder for constructing User test fixtures with sensible defaults.

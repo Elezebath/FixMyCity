@@ -2,8 +2,8 @@ package lv.acnbootcamp.fixmycity.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import lv.acnbootcamp.fixmycity.dto.category.CategoryResponse;
-import lv.acnbootcamp.fixmycity.entity.AuditAction;
-import lv.acnbootcamp.fixmycity.entity.AuditEntityType;
+import lv.acnbootcamp.fixmycity.entity.audit.AuditAction;
+import lv.acnbootcamp.fixmycity.entity.audit.AuditEntityType;
 import lv.acnbootcamp.fixmycity.entity.Category;
 import lv.acnbootcamp.fixmycity.exception.category.CategoryAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.exception.category.CategoryInUseException;

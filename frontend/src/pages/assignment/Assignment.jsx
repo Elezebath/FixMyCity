@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { normalizeIncident } from '../utils/incidentHelpers';
+import { normalizeIncident } from '../../utils/incidentHelpers.js';
 import './Assignment.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;

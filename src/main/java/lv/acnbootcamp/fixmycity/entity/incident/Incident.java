@@ -1,7 +1,12 @@
-package lv.acnbootcamp.fixmycity.entity;
+package lv.acnbootcamp.fixmycity.entity.incident;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lv.acnbootcamp.fixmycity.entity.BaseEntity;
+import lv.acnbootcamp.fixmycity.entity.Category;
+import lv.acnbootcamp.fixmycity.entity.Company;
+import lv.acnbootcamp.fixmycity.entity.user.User;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

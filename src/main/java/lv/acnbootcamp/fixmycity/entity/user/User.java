@@ -1,4 +1,4 @@
-package lv.acnbootcamp.fixmycity.entity;
+package lv.acnbootcamp.fixmycity.entity.user;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -6,6 +6,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lv.acnbootcamp.fixmycity.entity.incident.Comment;
+import lv.acnbootcamp.fixmycity.entity.Company;
+import lv.acnbootcamp.fixmycity.entity.incident.Incident;
+import lv.acnbootcamp.fixmycity.entity.incident.IncidentAssignment;
+import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatusHistory;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

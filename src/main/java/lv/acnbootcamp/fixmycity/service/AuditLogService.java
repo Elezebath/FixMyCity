@@ -1,8 +1,8 @@
 package lv.acnbootcamp.fixmycity.service;
 
 import lv.acnbootcamp.fixmycity.dto.audit.AuditLogResponse;
-import lv.acnbootcamp.fixmycity.entity.AuditAction;
-import lv.acnbootcamp.fixmycity.entity.AuditEntityType;
+import lv.acnbootcamp.fixmycity.entity.audit.AuditAction;
+import lv.acnbootcamp.fixmycity.entity.audit.AuditEntityType;
 
 import java.util.List;
 

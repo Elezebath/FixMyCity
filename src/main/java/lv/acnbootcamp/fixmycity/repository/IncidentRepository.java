@@ -1,8 +1,8 @@
 package lv.acnbootcamp.fixmycity.repository;
 
-import lv.acnbootcamp.fixmycity.entity.Incident;
-import lv.acnbootcamp.fixmycity.entity.IncidentPriority;
-import lv.acnbootcamp.fixmycity.entity.IncidentStatus;
+import lv.acnbootcamp.fixmycity.entity.incident.Incident;
+import lv.acnbootcamp.fixmycity.entity.incident.IncidentPriority;
+import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -2,8 +2,8 @@ package lv.acnbootcamp.fixmycity.service;
 
 import lv.acnbootcamp.fixmycity.dto.auth.RegisterRequest;
 import lv.acnbootcamp.fixmycity.dto.user.UserResponse;
-import lv.acnbootcamp.fixmycity.entity.Role;
-import lv.acnbootcamp.fixmycity.entity.User;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
+import lv.acnbootcamp.fixmycity.entity.user.User;
 import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.repository.UserRepository;
 import lv.acnbootcamp.fixmycity.util.UserTestDataBuilder;
