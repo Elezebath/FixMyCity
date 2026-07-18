@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Central Spring Security configuration for FixMyCity.
- *
  * Responsibilities:
  *  - Defines which endpoints are public vs. require authentication/roles
  *  - Configures password hashing (BCrypt)

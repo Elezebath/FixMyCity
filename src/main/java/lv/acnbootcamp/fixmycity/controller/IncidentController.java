@@ -24,7 +24,6 @@ import lv.acnbootcamp.fixmycity.repository.UserRepository;
 import lv.acnbootcamp.fixmycity.service.IncidentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
@@ -146,7 +145,6 @@ public class IncidentController {
     }
 
     @PatchMapping("/{id}/assign")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @Operation(
             summary = "Assign incident to company",
             description = "Assigns an existing incident to a company for resolution"
@@ -162,7 +160,6 @@ public class IncidentController {
     }
 
     @PatchMapping("/{id}/resolve")
-    @PreAuthorize("hasRole('COMPANY')")
     @Operation(
             summary = "Resolve incident by company",
             description = "Marks an incident as resolved with a required closing comment"
@@ -188,7 +185,6 @@ public class IncidentController {
     @ResponseStatus(HttpStatus.CREATED)
     @SecurityRequirement(name = "bearerAuth")
     @SecurityRequirement(name = "bearerAuth")
-    @PreAuthorize("hasAnyRole('CITIZEN', 'MANAGER', 'ADMIN')")
     @Operation(
             summary = "Report a new incident",
             description = "Creates a new incident with category, location and optional photo."
