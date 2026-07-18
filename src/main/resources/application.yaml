@@ -48,7 +48,7 @@ springdoc:
     path: /swagger-ui.html
 
 server:
-  port: ${SERVER_PORT:3100} # To be changed
+  port: ${SERVER_PORT:3100}
 
 logging:
   level:

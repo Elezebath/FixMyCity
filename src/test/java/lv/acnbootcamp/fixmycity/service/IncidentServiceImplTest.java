@@ -16,9 +16,6 @@ import lv.acnbootcamp.fixmycity.exception.incident.InvalidStatusException;
 import lv.acnbootcamp.fixmycity.exception.user.CompanyNotFoundException;
 import lv.acnbootcamp.fixmycity.exception.user.UserNotFoundException;
 import lv.acnbootcamp.fixmycity.mapper.IncidentMapper;
-import lv.acnbootcamp.fixmycity.repository.CategoryRepository;
-import lv.acnbootcamp.fixmycity.repository.IncidentRepository;
-import lv.acnbootcamp.fixmycity.repository.UserRepository;
 import lv.acnbootcamp.fixmycity.service.impl.IncidentServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +34,6 @@ import org.mockito.Mock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

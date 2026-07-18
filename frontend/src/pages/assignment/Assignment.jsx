@@ -124,12 +124,14 @@ export default function Assignment() {
                     <tbody>
                     {incidents.map((incident) => (
                         <tr key={incident.id}>
-                            <td>{incident.id}</td>
-                            <td>{incident.category}</td>
-                            <td>{incident.address}</td>
-                            <td>{new Date(incident.createdAt).toLocaleDateString()}</td>
+                            <td className="assignment-table__id">{incident.id}</td>
+                            <td className="assignment-table__category">{incident.category}</td>
+                            <td className="assignment-table__location">{incident.address}</td>
+                            <td className="assignment-table__date">
+                                {new Date(incident.createdAt).toLocaleDateString()}
+                            </td>
                             <td>
-                                <button onClick={() => openAssignModal(incident)}>
+                                <button className="assign-btn" onClick={() => openAssignModal(incident)}>
                                     Assign
                                 </button>
                             </td>

@@ -130,7 +130,7 @@ jobs:
       - name: Build and start stack
         run: docker compose -f docker-compose.resolved.yml up -d --build app mysql
 
-      #      ---------------------- THIS SHOULD BE REMOVED AFTER !! -------------------------------------------------
+#      ---------------------- THIS SHOULD BE REMOVED AFTER !! -------------------------------------------------
 
       - name: Fix role column type (VARCHAR instead of native ENUM)
         run: |

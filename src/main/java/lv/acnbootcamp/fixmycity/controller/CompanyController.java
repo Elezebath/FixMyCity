@@ -2,10 +2,7 @@ package lv.acnbootcamp.fixmycity.controller;
 
 import lombok.RequiredArgsConstructor;
 import lv.acnbootcamp.fixmycity.dto.company.CompanyResponse;
-import lv.acnbootcamp.fixmycity.entity.Company;
-
 import lv.acnbootcamp.fixmycity.repository.CompanyRepository;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +17,6 @@ public class CompanyController {
     private final CompanyRepository companyRepository;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public List<CompanyResponse> findAll() {
         return companyRepository.findAllByActiveTrue().stream()
                 .map(c -> CompanyResponse.builder()

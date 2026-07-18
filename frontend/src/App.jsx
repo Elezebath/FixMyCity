@@ -13,6 +13,7 @@ import ForgotPassword from './pages/auth/ForgotPassword.jsx';
 import ResetPassword from './pages/auth/ResetPassword.jsx';
 import './App.css';
 import Assignment from "./pages/assignment/Assignment.jsx";
+import AuditLogs from './pages/admin/AuditLogs.jsx';
 
 function App() {
     return (
@@ -40,6 +41,11 @@ function App() {
                         ['MANAGER', 'ADMIN'].includes(
                             JSON.parse(localStorage.getItem('user') || 'null')?.role
                         ) ? <Assignment /> : <NotFound />
+                    } />
+                    <Route path="admin/logs" element={
+                        <AdminRoute>
+                            <AuditLogs />
+                        </AdminRoute>
                     } />
                 </Route>
             </Route>
