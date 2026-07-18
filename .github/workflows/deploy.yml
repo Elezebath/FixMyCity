@@ -132,10 +132,10 @@ jobs:
 
 #      ---------------------- THIS SHOULD BE REMOVED AFTER !! -------------------------------------------------
 
-#      - name: Fix role column type (VARCHAR instead of native ENUM)
-#        run: |
-#            docker exec fixmycity-mysql-1 mysql -u root -p"${{ secrets.DB_PASSWORD }}" \
-#              -e "ALTER TABLE users MODIFY COLUMN role VARCHAR(255) NOT NULL;" fixmycity
+      - name: Fix role column type (VARCHAR instead of native ENUM)
+        run: |
+            docker exec fixmycity-mysql-1 mysql -u root -p"${{ secrets.DB_PASSWORD }}" \
+              -e "ALTER TABLE users MODIFY COLUMN role VARCHAR(255) NOT NULL;" fixmycity
 
       - name: Verify deployment
         env:
