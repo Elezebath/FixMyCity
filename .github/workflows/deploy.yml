@@ -24,7 +24,7 @@ jobs:
     env:
       APP_CONTAINER_NAME: fixmycity-app
       COMPOSE_PROJECT_NAME: fixmycity
-      COMPOSE_BAKE: "True"
+      COMPOSE_BAKE: "false"
 
     steps:
       - name: Checkout code
