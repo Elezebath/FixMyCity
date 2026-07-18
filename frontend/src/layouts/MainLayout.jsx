@@ -8,6 +8,7 @@ const ALL_NAV_ITEMS = [
     { to: '/app/report', label: 'Report Issue', icon: '➕' },
     { to: '/app/assignment', label: 'Assignment', icon: '🗂', roles: ['MANAGER', 'ADMIN'] },
     { to: '/app/admin/users', label: 'User Administration', icon: '🛡️', roles: ['ADMIN'] },
+    { to: '/app/admin/logs', label: 'Audit Logs', icon: '📜', roles: ['ADMIN'] },
 ];
 
 function MainLayout() {

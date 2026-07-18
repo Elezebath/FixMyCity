@@ -33,3 +33,6 @@ build/
 
 *.env
 docker-compose.resolved.yml
+
+# User uploaded files
+uploads/
