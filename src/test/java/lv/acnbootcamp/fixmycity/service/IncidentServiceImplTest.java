@@ -1,12 +1,8 @@
 package lv.acnbootcamp.fixmycity.service;
 
-import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
-import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.*;
 import lv.acnbootcamp.fixmycity.entity.*;
-import lv.acnbootcamp.fixmycity.entity.incident.Comment;
-import lv.acnbootcamp.fixmycity.entity.incident.Incident;
-import lv.acnbootcamp.fixmycity.entity.incident.IncidentPriority;
-import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatus;
+import lv.acnbootcamp.fixmycity.entity.incident.*;
 import lv.acnbootcamp.fixmycity.entity.user.Role;
 import lv.acnbootcamp.fixmycity.entity.user.User;
 import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
@@ -26,8 +22,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
-import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
-import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
 import lv.acnbootcamp.fixmycity.repository.*;
 import org.junit.jupiter.api.Nested;
 import org.mockito.InjectMocks;
@@ -54,7 +48,7 @@ class IncidentServiceImplTest {
 
     @Mock
     private CompanyRepository companyRepository;
-    
+
     @Mock
     private CommentRepository commentRepository;
 
@@ -163,7 +157,7 @@ class IncidentServiceImplTest {
     @Test
     void findById_shouldThrowException_whenIdNegative() {
         assertThatThrownBy(() -> incidentService.findById(-1L))
-                .isInstanceOf( IllegalArgumentException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -183,7 +177,7 @@ class IncidentServiceImplTest {
     @Test
     void findAllByStatus_shouldThrowException_whenStatusNull() {
         assertThatThrownBy(() -> incidentService.findAllByStatus(null))
-                .isInstanceOf( InvalidStatusException.class);
+                .isInstanceOf(InvalidStatusException.class);
 
     }
 
@@ -418,6 +412,42 @@ class IncidentServiceImplTest {
 
             verifyNoInteractions(incidentRepository);
         }
+
+        @Test
+        void throwsWhenIncidentAlreadyAssigned() {
+            incident.setStatus(IncidentStatus.ASSIGNED);
+
+            AssignIncidentRequest request = AssignIncidentRequest.builder()
+                    .companyId(1L)
+                    .build();
+
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
+                    .thenReturn(Optional.of(incident));
+
+            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request, 20L))
+                    .isInstanceOf(InvalidIncidentException.class)
+                    .hasMessageContaining("already been assigned");
+
+            verifyNoInteractions(companyRepository);
+        }
+
+        @Test
+        void throwsWhenIncidentAlreadyResolved() {
+            incident.setStatus(IncidentStatus.RESOLVED);
+
+            AssignIncidentRequest request = AssignIncidentRequest.builder()
+                    .companyId(1L)
+                    .build();
+
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
+                    .thenReturn(Optional.of(incident));
+
+            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request, 20L))
+                    .isInstanceOf(InvalidIncidentException.class)
+                    .hasMessageContaining("Resolved incidents cannot be assigned");
+
+            verifyNoInteractions(companyRepository);
+        }
     }
 
     @Nested
@@ -482,6 +512,8 @@ class IncidentServiceImplTest {
             ResolveIncidentRequest request = ResolveIncidentRequest.builder()
                     .comment("Fixed it")
                     .build();
+            incident.setStatus(IncidentStatus.ASSIGNED);
+            incident.setAssignedCompany(company);
 
             when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
                     .thenReturn(Optional.of(incident));
@@ -502,12 +534,10 @@ class IncidentServiceImplTest {
 
             when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
                     .thenReturn(Optional.of(incident));
-            when(userRepository.findByEmail("worker@fixit.com"))
-                    .thenReturn(Optional.of(companyUser));
 
             assertThatThrownBy(() -> incidentService.resolveByCompany(10L, request, "worker@fixit.com"))
                     .isInstanceOf(InvalidIncidentException.class)
-                    .hasMessageContaining("Only the assigned company");
+                    .hasMessageContaining("Incident must be assigned before it can be resolved.");
 
             verify(incidentRepository, never()).save(any());
         }
@@ -515,6 +545,7 @@ class IncidentServiceImplTest {
         @Test
         void throwsWhenUserBelongsToDifferentCompany() {
             Company otherCompany = Company.builder().companyId(2L).companyName("Other Co").build();
+            incident.setStatus(IncidentStatus.ASSIGNED);
             incident.setAssignedCompany(company);
 
             User otherCompanyUser = new User();
@@ -537,6 +568,7 @@ class IncidentServiceImplTest {
 
         @Test
         void throwsWhenResolvingUserHasNoCompany() {
+            incident.setStatus(IncidentStatus.ASSIGNED);
             incident.setAssignedCompany(company);
 
             User citizenUser = new User();
@@ -554,5 +586,139 @@ class IncidentServiceImplTest {
             assertThatThrownBy(() -> incidentService.resolveByCompany(10L, request, "citizen@mail.com"))
                     .isInstanceOf(InvalidIncidentException.class);
         }
+
+        @Test
+        void throwsWhenIncidentNotAssigned() {
+            incident.setStatus(IncidentStatus.NEW);
+
+            ResolveIncidentRequest request = ResolveIncidentRequest.builder()
+                    .comment("Fixed it")
+                    .build();
+
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
+                    .thenReturn(Optional.of(incident));
+
+            assertThatThrownBy(() ->
+                    incidentService.resolveByCompany(10L, request, "worker@fixit.com"))
+                    .isInstanceOf(InvalidIncidentException.class)
+                    .hasMessageContaining("must be assigned");
+
+            verifyNoInteractions(userRepository);
+        }
+        @Test
+        void throwsWhenIncidentAlreadyResolved() {
+            incident.setStatus(IncidentStatus.RESOLVED);
+
+            ResolveIncidentRequest request = ResolveIncidentRequest.builder()
+                    .comment("Done")
+                    .build();
+
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
+                    .thenReturn(Optional.of(incident));
+
+            assertThatThrownBy(() ->
+                    incidentService.resolveByCompany(10L, request, "worker@fixit.com"))
+                    .isInstanceOf(InvalidIncidentException.class)
+                    .hasMessageContaining("already been resolved");
+        }
     }
+    @Nested
+    class getStatusHistory{
+
+    @Test
+    void getStatusHistory_shouldReturnHistory() {
+        IncidentStatusHistory history = IncidentStatusHistory.builder()
+                .incident(incident)
+                .oldStatus(IncidentStatus.NEW)
+                .newStatus(IncidentStatus.ASSIGNED)
+                .remarks("Assigned")
+                .build();
+
+        IncidentStatusHistoryResponse response =
+                new IncidentStatusHistoryResponse();
+
+        when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                .thenReturn(Optional.of(incident));
+
+        when(incidentStatusHistoryRepository
+                .findAllByIncident_IncidentIdOrderByChangedAtAsc(1L))
+                .thenReturn(List.of(history));
+
+        when(incidentMapper.toStatusHistoryResponse(history, true))
+                .thenReturn(response);
+
+        List<IncidentStatusHistoryResponse> result =
+                incidentService.getStatusHistory(1L, 20L, Role.MANAGER);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst()).isEqualTo(response);
+
+        verify(incidentStatusHistoryRepository)
+                .findAllByIncident_IncidentIdOrderByChangedAtAsc(1L);
+    }
+
+    @Test
+    void getStatusHistory_shouldThrowWhenIncidentNotFound() {
+
+        when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                incidentService.getStatusHistory(1L, 20L, Role.MANAGER))
+                .isInstanceOf(IncidentNotFoundException.class);
+    }
+
+    @Test
+    void getStatusHistory_shouldHideChangedByForCitizen() {
+
+        IncidentStatusHistory history = IncidentStatusHistory.builder()
+                .incident(incident)
+                .build();
+
+        IncidentStatusHistoryResponse response =
+                new IncidentStatusHistoryResponse();
+
+        when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                .thenReturn(Optional.of(incident));
+
+        when(incidentStatusHistoryRepository
+                .findAllByIncident_IncidentIdOrderByChangedAtAsc(1L))
+                .thenReturn(List.of(history));
+
+        when(incidentMapper.toStatusHistoryResponse(history, false))
+                .thenReturn(response);
+
+        incidentService.getStatusHistory(1L, 1L, Role.CITIZEN);
+
+        verify(incidentMapper)
+                .toStatusHistoryResponse(history, false);
+    }
+
+
+    @Test
+    void getStatusHistory_shouldIncludeChangedByForManager() {
+
+        IncidentStatusHistory history = IncidentStatusHistory.builder()
+                .incident(incident)
+                .build();
+
+        IncidentStatusHistoryResponse response =
+                new IncidentStatusHistoryResponse();
+
+        when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                .thenReturn(Optional.of(incident));
+
+        when(incidentStatusHistoryRepository
+                .findAllByIncident_IncidentIdOrderByChangedAtAsc(1L))
+                .thenReturn(List.of(history));
+
+        when(incidentMapper.toStatusHistoryResponse(history, true))
+                .thenReturn(response);
+
+        incidentService.getStatusHistory(1L, 20L, Role.MANAGER);
+
+        verify(incidentMapper)
+                .toStatusHistoryResponse(history, true);
+    }
+}
 }

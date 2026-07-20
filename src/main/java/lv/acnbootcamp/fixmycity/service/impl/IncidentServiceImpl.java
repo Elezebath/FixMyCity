@@ -237,6 +237,18 @@ public class IncidentServiceImpl implements IncidentService {
                 .orElseThrow(() -> new IncidentNotFoundException(
                         "Incident not found with id: " + incidentId));
 
+        if (incident.getStatus() == IncidentStatus.RESOLVED) {
+            throw new InvalidIncidentException(
+                    "Resolved incidents cannot be assigned."
+            );
+        }
+
+        if (incident.getStatus() == IncidentStatus.ASSIGNED) {
+            throw new InvalidIncidentException(
+                    "Incident has already been assigned."
+            );
+        }
+
         Company company = companyRepository
                 .findById(request.getCompanyId())
                 .orElseThrow(() -> new CompanyNotFoundException(
@@ -268,6 +280,18 @@ public class IncidentServiceImpl implements IncidentService {
                 .findByIncidentIdAndSoftDeletedFalse(incidentId)
                 .orElseThrow(() -> new IncidentNotFoundException(
                         "Incident not found with id: " + incidentId));
+
+        if (incident.getStatus() == IncidentStatus.RESOLVED) {
+            throw new InvalidIncidentException(
+                    "Incident has already been resolved."
+            );
+        }
+
+        if (incident.getStatus() != IncidentStatus.ASSIGNED) {
+            throw new InvalidIncidentException(
+                    "Incident must be assigned before it can be resolved."
+            );
+        }
 
         User resolvedBy = userRepository.findByEmail(resolvedByEmail)
                 .orElseThrow(() -> new UserNotFoundException(
