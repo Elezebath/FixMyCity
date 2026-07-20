@@ -7,6 +7,7 @@ import lv.acnbootcamp.fixmycity.entity.incident.Comment;
 import lv.acnbootcamp.fixmycity.entity.incident.Incident;
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatus;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
 import lv.acnbootcamp.fixmycity.entity.user.User;
 import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
 import lv.acnbootcamp.fixmycity.exception.incident.IncidentNotFoundException;
@@ -60,6 +61,9 @@ class IncidentServiceImplTest {
     @InjectMocks
     private IncidentServiceImpl incidentService;
 
+    @Mock
+    private IncidentStatusHistoryRepository incidentStatusHistoryRepository;
+
     private Incident incident;
     private IncidentResponse response;
     private User citizen;
@@ -76,6 +80,7 @@ class IncidentServiceImplTest {
                 .build();
 
         companyUser = new User();
+        companyUser.setId(2L);
         companyUser.setCompany(company);
 
         citizen = User.builder()
@@ -338,6 +343,8 @@ class IncidentServiceImplTest {
                     .companyId(1L)
                     .build();
 
+            User manager = User.builder().id(20L).role(Role.MANAGER).build();
+
             when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
                     .thenReturn(Optional.of(incident));
             when(companyRepository.findById(1L))
@@ -346,8 +353,9 @@ class IncidentServiceImplTest {
                     .thenReturn(incident);
             when(incidentMapper.toResponse(incident))
                     .thenReturn(new IncidentResponse());
+            when(userRepository.findById(20L)).thenReturn(Optional.of(manager));
 
-            IncidentResponse response = incidentService.assignToCompany(10L, request);
+            IncidentResponse response = incidentService.assignToCompany(10L, request, 20L);
 
             assertThat(response).isNotNull();
             assertThat(incident.getStatus()).isEqualTo(IncidentStatus.ASSIGNED);
@@ -364,7 +372,7 @@ class IncidentServiceImplTest {
             when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request))
+            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request, 20L))
                     .isInstanceOf(IncidentNotFoundException.class);
 
             verifyNoInteractions(companyRepository);
@@ -381,7 +389,7 @@ class IncidentServiceImplTest {
             when(companyRepository.findById(99L))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request))
+            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request, 20L))
                     .isInstanceOf(CompanyNotFoundException.class);
 
             verify(incidentRepository, never()).save(any());
@@ -393,7 +401,7 @@ class IncidentServiceImplTest {
                     .companyId(null)
                     .build();
 
-            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request))
+            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request, 20L))
                     .isInstanceOf(InvalidIncidentException.class);
 
             verifyNoInteractions(incidentRepository);
@@ -405,7 +413,7 @@ class IncidentServiceImplTest {
                     .companyId(1L)
                     .build();
 
-            assertThatThrownBy(() -> incidentService.assignToCompany(0L, request))
+            assertThatThrownBy(() -> incidentService.assignToCompany(0L, request, 20L))
                     .isInstanceOf(IllegalArgumentException.class);
 
             verifyNoInteractions(incidentRepository);
@@ -428,10 +436,15 @@ class IncidentServiceImplTest {
                     .thenReturn(Optional.of(incident));
             when(userRepository.findByEmail("worker@fixit.com"))
                     .thenReturn(Optional.of(companyUser));
+            when(incidentRepository.save(any(Incident.class)))
+                    .thenReturn(incident);
+            when(userRepository.findById(2L))
+                    .thenReturn(Optional.of(companyUser));
             when(incidentMapper.toResponse(incident))
                     .thenReturn(new IncidentResponse());
 
             IncidentResponse response = incidentService.resolveByCompany(10L, request, "worker@fixit.com");
+
 
             assertThat(response).isNotNull();
             assertThat(incident.getStatus()).isEqualTo(IncidentStatus.RESOLVED);
