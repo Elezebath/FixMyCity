@@ -2,6 +2,27 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
+async function parseAuthError(response) {
+    let body = null;
+    try {
+        body = await response.json();
+    } catch {
+        body = null;
+    }
+
+    if (body && typeof body === 'object') {
+        if (body.error) return body.error;
+        if (body.message) return body.message;
+        // Field-level validation map from MethodArgumentNotValidException
+        const fieldMessages = Object.entries(body)
+            .filter(([k]) => k !== 'status' && k !== 'path' && k !== 'timestamp')
+            .map(([, v]) => v)
+            .filter(Boolean);
+        if (fieldMessages.length) return fieldMessages.join(' ');
+    }
+
+    return `Request failed (${response.status})`;
+}
 
 function Login() {
     const navigate = useNavigate();
@@ -35,8 +56,7 @@ function Login() {
             });
 
             if (!res.ok) {
-                const err = await res.json().catch(() => null);
-                throw new Error(err?.message || 'Invalid email or password');
+                throw new Error(await parseAuthError(res));
             }
 
             const data = await res.json();
@@ -80,8 +100,7 @@ function Login() {
             });
 
             if (!res.ok) {
-                const err = await res.json().catch(() => null);
-                throw new Error(err?.message || 'Registration failed');
+                throw new Error(await parseAuthError(res));
             }
 
             const data = await res.json();
