@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
 
@@ -9,6 +9,7 @@ function Login() {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
 
     const [registerForm, setRegisterForm] = useState({
         firstName: '',
@@ -18,12 +19,14 @@ function Login() {
         phone: '',
     });
     const [registerError, setRegisterError] = useState('');
+    const [isRegistering, setIsRegistering] = useState(false);
 
     const [loginError, setLoginError] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoginError('');
+        setIsLoggingIn(true);
         try {
             const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
@@ -52,6 +55,8 @@ function Login() {
 
         } catch (err) {
             setLoginError(err.message);
+        } finally {
+            setIsLoggingIn(false);
         }
     };
 
@@ -62,6 +67,7 @@ function Login() {
     const handleRegister = async (e) => {
         e.preventDefault();
         setRegisterError('');
+        setIsRegistering(true);
         try {
             const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register`, {
                 method: 'POST',
@@ -83,6 +89,8 @@ function Login() {
             setMode('signin');
         } catch (err) {
             setRegisterError(err.message);
+        } finally {
+            setIsRegistering(false);
         }
     };
 
@@ -136,6 +144,7 @@ function Login() {
                                     placeholder="citizen@demo.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
+                                    disabled={isLoggingIn}
                                 />
                             </label>
 
@@ -146,17 +155,14 @@ function Login() {
                                     placeholder="••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
+                                    disabled={isLoggingIn}
                                 />
                             </label>
 
-                            <div className="forgot-password-link">
-                                <Link to="/forgot-password">
-                                    Forgot password?
-                                </Link>
-                            </div>
+                            {loginError && <p className="login-error">{loginError}</p>}
 
-                            <button type="submit" className="login-submit">
-                                Sign in
+                            <button type="submit" className="login-submit" disabled={isLoggingIn}>
+                                {isLoggingIn ? 'Signing in…' : 'Sign in'}
                             </button>
                         </form>
 
@@ -179,6 +185,7 @@ function Login() {
                                     value={registerForm.firstName}
                                     onChange={handleRegisterChange}
                                     placeholder="Aisha"
+                                    disabled={isRegistering}
                                 />
                             </label>
 
@@ -189,6 +196,7 @@ function Login() {
                                     value={registerForm.lastName}
                                     onChange={handleRegisterChange}
                                     placeholder="Patel"
+                                    disabled={isRegistering}
                                 />
                             </label>
 
@@ -200,6 +208,7 @@ function Login() {
                                     value={registerForm.email}
                                     onChange={handleRegisterChange}
                                     placeholder="you@example.com"
+                                    disabled={isRegistering}
                                 />
                             </label>
 
@@ -211,6 +220,7 @@ function Login() {
                                     value={registerForm.password}
                                     onChange={handleRegisterChange}
                                     placeholder="••••••••"
+                                    disabled={isRegistering}
                                 />
                             </label>
 
@@ -221,13 +231,14 @@ function Login() {
                                     value={registerForm.phone}
                                     onChange={handleRegisterChange}
                                     placeholder="+371 23456789"
+                                    disabled={isRegistering}
                                 />
                             </label>
 
                             {registerError && <p className="login-error">{registerError}</p>}
 
-                            <button type="submit" className="login-submit">
-                                Create account
+                            <button type="submit" className="login-submit" disabled={isRegistering}>
+                                {isRegistering ? 'Creating account…' : 'Create account'}
                             </button>
                         </form>
                     </>
