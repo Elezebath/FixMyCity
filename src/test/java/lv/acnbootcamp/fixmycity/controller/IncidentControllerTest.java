@@ -374,6 +374,145 @@ class IncidentControllerTest {
     }
 
     @Nested
+    @DisplayName("GET /api/incidents/my - Find My Incidents Tests")
+    class FindMyIncidentsTests {
+
+        @Test
+        @DisplayName("Should return 401 when not authenticated")
+        void shouldReturn401WhenNotAuthenticated() throws Exception {
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isUnauthorized());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @Test
+        @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
+        @DisplayName("Should resolve citizen id from authenticated user, not from request")
+        void shouldResolveCitizenIdFromAuthenticatedUser() throws Exception {
+            when(userRepository.findByEmail("testuser@test.com"))
+                    .thenReturn(Optional.of(testCitizen));
+            when(incidentService.findAllByCitizen(10L))
+                    .thenReturn(List.of(createResponse(1L)));
+
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(1))
+                    .andExpect(jsonPath("$[0].citizenId").value(10));
+
+            // Critical isolation check: service is called with the ID resolved
+            // from the JWT principal, never an arbitrary/client-supplied one.
+            verify(incidentService, times(1)).findAllByCitizen(10L);
+            verify(incidentService, never()).findAllByCitizen(argThat(id -> id != null && !id.equals(10L)));
+        }
+
+        @Test
+        @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
+        @DisplayName("Should return empty list when citizen has no incidents")
+        void shouldReturnEmptyListWhenCitizenHasNoIncidents() throws Exception {
+            when(userRepository.findByEmail("testuser@test.com"))
+                    .thenReturn(Optional.of(testCitizen));
+            when(incidentService.findAllByCitizen(10L)).thenReturn(List.of());
+
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(0));
+        }
+
+        @Test
+        @WithMockUser(username = "ghost@test.com", roles = "CITIZEN")
+        @DisplayName("Should return 401 when authenticated user not found in database")
+        void shouldReturn401WhenUserNotFoundInDatabase() throws Exception {
+            when(userRepository.findByEmail("ghost@test.com")).thenReturn(Optional.empty());
+
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isUnauthorized());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @Test
+        @WithMockUser(username = "manager@test.com", roles = "MANAGER")
+        @DisplayName("Should work for MANAGER role too, returning only their own reported incidents")
+        void shouldWorkForManagerRole() throws Exception {
+            User managerUser = User.builder()
+                    .id(20L)
+                    .email("manager@test.com")
+                    .role(Role.MANAGER)
+                    .build();
+
+            when(userRepository.findByEmail("manager@test.com"))
+                    .thenReturn(Optional.of(managerUser));
+            when(incidentService.findAllByCitizen(20L)).thenReturn(List.of());
+
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isOk());
+
+            verify(incidentService).findAllByCitizen(20L);
+        }
+
+        @Test
+        @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
+        @DisplayName("Should return multiple incidents in service order")
+        void shouldReturnMultipleIncidents() throws Exception {
+            when(userRepository.findByEmail("testuser@test.com"))
+                    .thenReturn(Optional.of(testCitizen));
+            when(incidentService.findAllByCitizen(10L))
+                    .thenReturn(List.of(createResponse(1L), createResponse(2L), createResponse(3L)));
+
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(3));
+
+            verify(incidentService).findAllByCitizen(10L);
+        }
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
+    @DisplayName("Should include assigned company, resolution date and latest comment in response")
+    void shouldIncludeAssignmentResolutionAndCommentDetails() throws Exception {
+        when(userRepository.findByEmail("testuser@test.com"))
+                .thenReturn(Optional.of(testCitizen));
+
+        IncidentResponse resolved = IncidentResponse.builder()
+                .incidentId(5L)
+                .citizenId(10L)
+                .title("Broken bench")
+                .status("RESOLVED")
+                .assignedCompanyName("FixIt Co.")
+                .resolvedAt(java.time.LocalDateTime.of(2026, 7, 18, 16, 0))
+                .latestComment("Bench repaired and reinstalled.")
+                .latestCommentBy("Jane Smith")
+                .build();
+
+        when(incidentService.findAllByCitizen(10L)).thenReturn(List.of(resolved));
+
+        mockMvc.perform(get("/api/incidents/my"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].assignedCompanyName").value("FixIt Co."))
+                .andExpect(jsonPath("$[0].resolvedAt").exists())
+                .andExpect(jsonPath("$[0].latestComment").value("Bench repaired and reinstalled."))
+                .andExpect(jsonPath("$[0].latestCommentBy").value("Jane Smith"));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
+    @DisplayName("Should omit company, resolution date and comment when incident not yet assigned")
+    void shouldOmitOptionalFieldsWhenIncidentIsNew() throws Exception {
+        when(userRepository.findByEmail("testuser@test.com"))
+                .thenReturn(Optional.of(testCitizen));
+
+        when(incidentService.findAllByCitizen(10L)).thenReturn(List.of(createResponse(6L)));
+
+        mockMvc.perform(get("/api/incidents/my"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].assignedCompanyName").doesNotExist())
+                .andExpect(jsonPath("$[0].resolvedAt").doesNotExist())
+                .andExpect(jsonPath("$[0].latestComment").doesNotExist());
+    }
+
+    @Nested
     @DisplayName("GET /api/incidents/company/{companyId} - Find By Company Tests")
     class FindByCompanyTests {
 

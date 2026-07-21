@@ -155,3 +155,13 @@ export async function getIncidentStatusHistory(id) {
 
     return response.json();
 }
+
+export async function getMyIncidents() {
+    const response = await fetch(`${API_BASE}/my`, {
+        headers: { ...getAuthHeader() },
+    });
+    if (!response.ok) {
+        throw new Error(await parseError(response));
+    }
+    return response.json();
+}

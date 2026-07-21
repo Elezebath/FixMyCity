@@ -117,6 +117,35 @@ class SecurityConfigTest {
                     .andExpect(status().is(org.hamcrest.Matchers.not(401)));
         }
     }
+    
+    // ---------------------------------------------------------------
+    // Access control for /api/incidents/my
+    // ---------------------------------------------------------------
+
+    @Nested
+    class MyIncidentsAccess {
+
+        @Test
+        void myIncidents_withoutAuth_returns401() throws Exception {
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @WithMockUser(roles = "CITIZEN")
+        void myIncidents_asCitizen_isAccessible() throws Exception {
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void myIncidents_asManager_isAccessible() throws Exception {
+            // No role restriction — any authenticated user, not just CITIZEN.
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+        }
+    }
 
     // ---------------------------------------------------------------
     // GET /api/categories — authenticated, any role
