@@ -28,7 +28,7 @@ public class IncidentMapper {
         }
 
         Comment latestComment = (incident.getComments() != null && !incident.getComments().isEmpty())
-                ? incident.getComments().get(0)
+                ? incident.getComments().getFirst()
                 : null;
 
         return IncidentResponse.builder()
@@ -53,7 +53,7 @@ public class IncidentMapper {
                 .createdAt(incident.getCreatedAt())
                 .attachment(
                         incident.getAttachments() != null && !incident.getAttachments().isEmpty() ? toAttachmentResponse(
-                                incident.getAttachments().get(0)
+                                incident.getAttachments().getFirst()
                         ) : null
                 )
                 .assignedCompanyName(
