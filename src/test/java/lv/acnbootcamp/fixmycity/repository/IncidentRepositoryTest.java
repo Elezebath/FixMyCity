@@ -34,7 +34,7 @@ class IncidentRepositoryTest {
 
     @Autowired
     IncidentRepositoryTest(IncidentRepository incidentRepository, UserRepository userRepository,
-                           CategoryRepository categoryRepository, AttachmentRepository attachmentRepository){
+                           CategoryRepository categoryRepository){
         this.incidentRepository = incidentRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
