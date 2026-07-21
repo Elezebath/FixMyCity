@@ -136,3 +136,22 @@ export async function resolveIncident(id, comment) {
 
     return response.json();
 }
+
+
+/**
+ * GET /api/incidents/{id}/status-history
+ */
+export async function getIncidentStatusHistory(id) {
+    const response = await fetch(`${API_BASE}/${id}/status-history`, {
+        headers: { ...getAuthHeader() },
+    });
+
+    if (!response.ok) {
+        const message = await parseError(response);
+        const err = new Error(message);
+        err.status = response.status;
+        throw err;
+    }
+
+    return response.json();
+}

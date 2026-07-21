@@ -3,8 +3,10 @@ package lv.acnbootcamp.fixmycity.mapper;
 import lombok.extern.slf4j.Slf4j;
 import lv.acnbootcamp.fixmycity.dto.incident.AttachmentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.IncidentStatusHistoryResponse;
 import lv.acnbootcamp.fixmycity.entity.incident.Attachment;
 import lv.acnbootcamp.fixmycity.entity.incident.Incident;
+import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatusHistory;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -67,6 +69,25 @@ public class IncidentMapper {
                 .fileName(attachment.getFileName())
                 .fileType(attachment.getFileType())
                 .filePath(attachment.getFilePath())
+                .build();
+    }
+
+    /**
+     * Convert IncidentStatusHistory Entity to IncidentStatusHistoryResponse DTO
+     *
+     * @param history incident status history
+     * @param includeChangedBy whether to include changed by or not
+     * @return IncidentStatusHistoryResponse
+     */
+    public IncidentStatusHistoryResponse toStatusHistoryResponse(IncidentStatusHistory history, boolean includeChangedBy) {
+        return IncidentStatusHistoryResponse.builder()
+                .statusHistoryId(history.getStatusHistoryId())
+                .incidentId(history.getIncident().getIncidentId())
+                .oldStatus(history.getOldStatus())
+                .newStatus(history.getNewStatus())
+                .changedByName(includeChangedBy ? history.getChangedBy().getFullName() : null)
+                .remarks(history.getRemarks())
+                .changedAt(history.getChangedAt())
                 .build();
     }
 }

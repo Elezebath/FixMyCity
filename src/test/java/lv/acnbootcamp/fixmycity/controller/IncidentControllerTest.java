@@ -36,6 +36,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -789,17 +790,22 @@ class IncidentControllerTest {
         }
 
         @Test
-        @WithMockUser(roles = "MANAGER")
+        @WithMockUser(username = "manager@test.com", roles = "MANAGER")
         void returns200WhenRoleIsManager() throws Exception {
             AssignIncidentRequest request = AssignIncidentRequest.builder().companyId(1L).build();
 
-            when(incidentService.assignToCompany(anyLong(), any(AssignIncidentRequest.class)))
+            User managerUser = User.builder().id(20L).role(Role.MANAGER).build();
+            when(userRepository.findByEmail("manager@test.com")).thenReturn(java.util.Optional.of(managerUser));
+
+            when(incidentService.assignToCompany(anyLong(), any(AssignIncidentRequest.class), eq(20L)))
                     .thenReturn(new IncidentResponse());
 
             mockMvc.perform(patch("/api/incidents/10/assign")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
+
+            verify(incidentService).assignToCompany(eq(10L), any(AssignIncidentRequest.class), eq(20L));
         }
 
         @Test
