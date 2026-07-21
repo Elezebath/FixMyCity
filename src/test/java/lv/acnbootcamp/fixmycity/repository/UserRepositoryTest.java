@@ -16,8 +16,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserRepositoryTest {
 
+    private final UserRepository userRepository;
+
     @Autowired
-    private UserRepository userRepository;
+    UserRepositoryTest(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Test
     void findByEmail_returnsUser_whenEmailExists() {

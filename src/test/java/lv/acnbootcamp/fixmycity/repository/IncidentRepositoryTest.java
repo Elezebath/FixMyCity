@@ -28,17 +28,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class IncidentRepositoryTest {
 
-    @Autowired
-    private IncidentRepository incidentRepository;
+    private final IncidentRepository incidentRepository;
+    private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private AttachmentRepository attachmentRepository;
+    IncidentRepositoryTest(IncidentRepository incidentRepository, UserRepository userRepository,
+                           CategoryRepository categoryRepository){
+        this.incidentRepository = incidentRepository;
+        this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
+    }
 
     private User testCitizen;
     private Category testCategory;
