@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import './Login.css';
 
 async function parseAuthError(response) {
@@ -9,7 +9,6 @@ async function parseAuthError(response) {
     } catch {
         body = null;
     }
-
     if (body && typeof body === 'object') {
         if (body.error) return body.error;
         if (body.message) return body.message;
@@ -20,13 +19,13 @@ async function parseAuthError(response) {
             .filter(Boolean);
         if (fieldMessages.length) return fieldMessages.join(' ');
     }
-
     return `Request failed (${response.status})`;
 }
 
 function Login() {
     const navigate = useNavigate();
-    const [mode, setMode] = useState('signin');
+    const location = useLocation();
+    const [mode, setMode] = useState(location.state?.mode === 'signup' ? 'signup' : 'signin');
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

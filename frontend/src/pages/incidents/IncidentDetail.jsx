@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
     getIncident,
+    getIncidentStatusHistory,
     assignCompany,
     resolveIncident,
 } from '../../services/incidentService.js';
@@ -45,6 +46,7 @@ function Modal({ title, onClose, children }) {
 function IncidentDetail() {
     const { id } = useParams();
     const [incident, setIncident] = useState(null);
+    const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [notFound, setNotFound] = useState(false);
@@ -71,6 +73,9 @@ function IncidentDetail() {
         try {
             const data = await getIncident(numericId);
             setIncident(normalizeIncident(data));
+
+            const historyData = await getIncidentStatusHistory(numericId);
+            setHistory(historyData);
         } catch (err) {
             if (err.status === 404) {
                 setNotFound(true);
@@ -297,14 +302,47 @@ function IncidentDetail() {
                             {incident.description}
                         </p>
                     </div>
-                    {/* TO DO */}
-                    {/* Comments/history are not returned by IncidentResponse today.
-                        Resolve still creates a Comment server-side; UI notes that. */}
+
                     <div className="incident-detail__card">
-                        <h3>Activity & Comments</h3>
-                        <p className="incident-detail__muted">
-                            No comments found.
-                        </p>
+                        <h3>Status History</h3>
+
+                        {history.length === 0 ? (
+                            <p className="incident-detail__muted">
+                                No status changes yet.
+                            </p>
+                        ) : (
+                            <ul className="incident-detail__activity">
+                                {history.map(item => (
+                                    <li key={item.statusHistoryId}>
+                                        <span className="incident-detail__activity-dot" />
+
+                                        <div>
+                                            <p className="incident-detail__activity-text">
+                                                <strong>{formatStatus(item.oldStatus)}</strong>
+                                                {' → '}
+                                                <strong>{formatStatus(item.newStatus)}</strong>
+                                            </p>
+
+                                            {item.remarks && (
+                                                <p className="incident-detail__activity-text">
+                                                    {item.remarks}
+                                                </p>
+                                            )}
+
+                                            {item.changedByName && (
+                                                <p className="incident-detail__activity-text">
+                                                    Changed by {item.changedByName}
+                                                </p>
+                                            )}
+
+                                            <span className="incident-detail__activity-time">
+                            {formatDateTime(item.changedAt)}
+                        </span>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                 </div>
 
