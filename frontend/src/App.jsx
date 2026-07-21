@@ -14,11 +14,14 @@ import ResetPassword from './pages/auth/ResetPassword.jsx';
 import './App.css';
 import Assignment from "./pages/assignment/Assignment.jsx";
 import AuditLogs from './pages/admin/AuditLogs.jsx';
+import Home from './pages/home/Home.jsx';
+
 
 function App() {
     return (
         <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
