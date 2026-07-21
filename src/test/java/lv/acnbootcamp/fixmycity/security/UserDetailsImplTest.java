@@ -1,7 +1,7 @@
 package lv.acnbootcamp.fixmycity.security;
 
-import lv.acnbootcamp.fixmycity.entity.Role;
-import lv.acnbootcamp.fixmycity.entity.User;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
+import lv.acnbootcamp.fixmycity.entity.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
