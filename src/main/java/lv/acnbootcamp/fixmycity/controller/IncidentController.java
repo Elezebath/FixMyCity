@@ -94,6 +94,23 @@ public class IncidentController {
         return incidentService.findById(id);
     }
 
+    @GetMapping("/my")
+    @Operation(
+            summary = "Get incidents reported by the authenticated citizen",
+            description = "Returns incidents reported by the currently authenticated user, resolved from the JWT — not from a client-supplied ID."
+    )
+    @ApiResponse(responseCode = "200", description = "Incidents retrieved successfully")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public List<IncidentResponse> findMyIncidents(Authentication authentication) {
+
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("User not found with email: " + email));
+
+        log.info("REST request to fetch incidents for authenticated user {}", user.getId());
+        return incidentService.findAllByCitizen(user.getId());
+    }
+
     @GetMapping("/status/{status}")
     @Operation(summary = "Get incidents by status")
     @ApiResponse(responseCode = "200", description = "Incidents retrieved successfully")

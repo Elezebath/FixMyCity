@@ -5,6 +5,7 @@ import lv.acnbootcamp.fixmycity.dto.incident.AttachmentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentStatusHistoryResponse;
 import lv.acnbootcamp.fixmycity.entity.incident.Attachment;
+import lv.acnbootcamp.fixmycity.entity.incident.Comment;
 import lv.acnbootcamp.fixmycity.entity.incident.Incident;
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatusHistory;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,11 @@ public class IncidentMapper {
             log.warn("Attempted to map null incident");
             return null;
         }
+
+        Comment latestComment = (incident.getComments() != null && !incident.getComments().isEmpty())
+                ? incident.getComments().get(0)
+                : null;
+
         return IncidentResponse.builder()
                 .incidentId(incident.getIncidentId())
                 .title(incident.getTitle())
@@ -50,6 +56,17 @@ public class IncidentMapper {
                                 incident.getAttachments().get(0)
                         ) : null
                 )
+                .assignedCompanyName(
+                        incident.getAssignedCompany() != null ? incident.getAssignedCompany().getCompanyName() : null
+                )
+                .resolvedAt(incident.getResolvedAt())
+                .latestComment(latestComment != null ? latestComment.getComment() : null)
+                .latestCommentBy(
+                        latestComment != null && latestComment.getUser() != null
+                                ? latestComment.getUser().getFullName()
+                                : null
+                )
+                .latestCommentAt(latestComment != null ? latestComment.getCreatedAt() : null)
                 .build();
     }
 

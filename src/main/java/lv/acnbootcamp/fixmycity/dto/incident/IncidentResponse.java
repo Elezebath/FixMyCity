@@ -48,4 +48,20 @@ public class IncidentResponse {
 
     @Schema(description = "Incident attachment response")
     private AttachmentResponse attachment;
+
+    @Schema(example = "FixIt Co.")
+    private String assignedCompanyName;
+
+    @Schema(example = "2026-07-18T16:00:00")
+    private LocalDateTime resolvedAt;
+
+    @Schema(example = "Replaced the light fixture and tested it works.")
+    private String latestComment;
+
+    @Schema(example = "Jane Smith")
+    private String latestCommentBy;
+
+    @Schema(example = "2026-07-18T15:55:00")
+    private LocalDateTime latestCommentAt;
+
 }
