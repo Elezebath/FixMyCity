@@ -52,7 +52,9 @@ public class JwtService {
     }
 
     /**
-     * Checks that the token belongs to the supplied user and has not expired.
+     * Checks that the token belongs to the supplied user,
+     * the user account is enabled,
+     * and the token has not expired.
      */
     public boolean isTokenValid(
             String token,
@@ -61,6 +63,7 @@ public class JwtService {
         String username = extractUsername(token);
 
         return username.equals(userDetails.getUsername())
+                &&userDetails.isEnabled()
                 && !isTokenExpired(token);
     }
 
