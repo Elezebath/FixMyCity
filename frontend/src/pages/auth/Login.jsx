@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import './Login.css';
-
 
 function Login() {
     const navigate = useNavigate();
-    const [mode, setMode] = useState('signin');
+    const location = useLocation();
+    const [mode, setMode] = useState(location.state?.mode === 'signup' ? 'signup' : 'signin');
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
