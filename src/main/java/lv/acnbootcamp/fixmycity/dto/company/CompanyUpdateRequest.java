@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CompanyCreateRequest {
+public class CompanyUpdateRequest {
 
     @NotBlank(message = "Company name is required")
     private String companyName;

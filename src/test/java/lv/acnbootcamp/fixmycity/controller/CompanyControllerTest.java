@@ -2,7 +2,8 @@ package lv.acnbootcamp.fixmycity.controller;
 
 import lv.acnbootcamp.fixmycity.config.SecurityConfig;
 import lv.acnbootcamp.fixmycity.entity.Company;
-import lv.acnbootcamp.fixmycity.repository.CompanyRepository;
+import lv.acnbootcamp.fixmycity.service.CompanyService;
+import lv.acnbootcamp.fixmycity.dto.company.CompanyResponse;
 import lv.acnbootcamp.fixmycity.security.JwtService;
 import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import org.junit.jupiter.api.Nested;
@@ -31,7 +32,7 @@ class CompanyControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private CompanyRepository companyRepository;
+    private CompanyService companyService;
 
     @MockitoBean
     private JwtService jwtService;
@@ -39,26 +40,20 @@ class CompanyControllerTest {
     @MockitoBean
     private UserDetailsServiceImpl userDetailsServiceImpl;
 
-    private Company fixItCo() {
-        return Company.builder()
+    private CompanyResponse fixItCo() {
+        return CompanyResponse.builder()
                 .companyId(1L)
                 .companyName("FixIt Co.")
-                .registrationNo("LT123456789")
                 .contactEmail("contact@fixit.lv")
-                .contactPhone("+37060000000")
-                .address("Riga, Latvia")
                 .active(true)
                 .build();
     }
 
-    private Company roadWorks() {
-        return Company.builder()
+    private CompanyResponse roadWorks() {
+        return CompanyResponse.builder()
                 .companyId(2L)
                 .companyName("RoadWorks Ltd.")
-                .registrationNo("LT987654321")
                 .contactEmail("info@roadworks.lv")
-                .contactPhone(null)
-                .address(null)
                 .active(true)
                 .build();
     }
@@ -74,7 +69,7 @@ class CompanyControllerTest {
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().isUnauthorized());
 
-            verify(companyRepository, never()).findAllByActiveTrue();
+            verify(companyService, never()).findAll();
         }
 
         @Test
@@ -83,7 +78,7 @@ class CompanyControllerTest {
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().isForbidden());
 
-            verify(companyRepository, never()).findAllByActiveTrue();
+            verify(companyService, never()).findAll();
         }
 
         @Test
@@ -92,13 +87,13 @@ class CompanyControllerTest {
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().isForbidden());
 
-            verify(companyRepository, never()).findAllByActiveTrue();
+            verify(companyService, never()).findAll();
         }
 
         @Test
         @WithMockUser(roles = "MANAGER")
         void findAll_asManager_returns200() throws Exception {
-            when(companyRepository.findAllByActiveTrue()).thenReturn(List.of(fixItCo()));
+            when(companyService.findAll()).thenReturn(List.of(fixItCo()));
 
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().isOk());
@@ -107,7 +102,7 @@ class CompanyControllerTest {
         @Test
         @WithMockUser(roles = "ADMIN")
         void findAll_asAdmin_returns200() throws Exception {
-            when(companyRepository.findAllByActiveTrue()).thenReturn(List.of(fixItCo()));
+            when(companyService.findAll()).thenReturn(List.of(fixItCo()));
 
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().isOk());
@@ -123,7 +118,7 @@ class CompanyControllerTest {
         @Test
         @WithMockUser(roles = "MANAGER")
         void findAll_returnsEmptyList_whenNoActiveCompaniesExist() throws Exception {
-            when(companyRepository.findAllByActiveTrue()).thenReturn(Collections.emptyList());
+            when(companyService.findAll()).thenReturn(Collections.emptyList());
 
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().isOk())
@@ -134,7 +129,7 @@ class CompanyControllerTest {
         @Test
         @WithMockUser(roles = "MANAGER")
         void findAll_returnsSingleCompany_withMappedFields() throws Exception {
-            when(companyRepository.findAllByActiveTrue()).thenReturn(List.of(fixItCo()));
+            when(companyService.findAll()).thenReturn(List.of(fixItCo()));
 
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().isOk())
@@ -148,7 +143,7 @@ class CompanyControllerTest {
         @Test
         @WithMockUser(roles = "MANAGER")
         void findAll_returnsMultipleCompanies_inRepositoryOrder() throws Exception {
-            when(companyRepository.findAllByActiveTrue())
+            when(companyService.findAll())
                     .thenReturn(List.of(fixItCo(), roadWorks()));
 
             mockMvc.perform(get("/api/companies"))
@@ -166,7 +161,7 @@ class CompanyControllerTest {
             // Company entity has registrationNo, contactPhone, address, category, user —
             // none of these belong in CompanyResponse. This guards against accidental
             // leakage if the mapping in the controller is ever changed carelessly.
-            when(companyRepository.findAllByActiveTrue()).thenReturn(List.of(fixItCo()));
+            when(companyService.findAll()).thenReturn(List.of(fixItCo()));
 
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().isOk())
@@ -183,7 +178,7 @@ class CompanyControllerTest {
         void findAll_handlesCompanyWithNullOptionalFields() throws Exception {
             // contactPhone/address are nullable on the entity; ensure the mapping
             // and JSON serialization don't break when they're absent.
-            when(companyRepository.findAllByActiveTrue()).thenReturn(List.of(roadWorks()));
+            when(companyService.findAll()).thenReturn(List.of(roadWorks()));
 
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().isOk())
@@ -201,18 +196,18 @@ class CompanyControllerTest {
         @Test
         @WithMockUser(roles = "ADMIN")
         void findAll_callsFindAllByActiveTrue_exactlyOnce() throws Exception {
-            when(companyRepository.findAllByActiveTrue()).thenReturn(List.of(fixItCo()));
+            when(companyService.findAll()).thenReturn(List.of(fixItCo()));
 
             mockMvc.perform(get("/api/companies"));
 
-            verify(companyRepository, times(1)).findAllByActiveTrue();
-            verifyNoMoreInteractions(companyRepository);
+            verify(companyService, times(1)).findAll();
+            verifyNoMoreInteractions(companyService);
         }
 
         @Test
         @WithMockUser(roles = "ADMIN")
         void findAll_propagatesUnexpectedRepositoryException_as500() throws Exception {
-            when(companyRepository.findAllByActiveTrue())
+            when(companyService.findAll())
                     .thenThrow(new RuntimeException("Unexpected DB failure"));
 
             mockMvc.perform(get("/api/companies"))

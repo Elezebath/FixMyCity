@@ -76,7 +76,7 @@ public class UserAdminController {
     public ResponseEntity<UserAdminResponse> createUser(
             @Valid @RequestBody CreateUserByAdminRequest request) {
         UserAdminResponse created = userService.createUser(
-                request.getEmail(), request.getPassword(), request.getFullName(), request.getRole());
+                request.getEmail(), request.getPassword(), request.getFullName(), request.getRole(), request.getCompany());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
