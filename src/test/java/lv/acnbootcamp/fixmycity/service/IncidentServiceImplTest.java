@@ -1,12 +1,9 @@
 package lv.acnbootcamp.fixmycity.service;
 
-import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
-import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.*;
 import lv.acnbootcamp.fixmycity.entity.*;
-import lv.acnbootcamp.fixmycity.entity.incident.Comment;
-import lv.acnbootcamp.fixmycity.entity.incident.Incident;
-import lv.acnbootcamp.fixmycity.entity.incident.IncidentPriority;
-import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatus;
+import lv.acnbootcamp.fixmycity.entity.incident.*;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
 import lv.acnbootcamp.fixmycity.entity.user.User;
 import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
 import lv.acnbootcamp.fixmycity.exception.incident.IncidentNotFoundException;
@@ -20,13 +17,12 @@ import lv.acnbootcamp.fixmycity.service.impl.IncidentServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
 
-import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
-import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
 import lv.acnbootcamp.fixmycity.repository.*;
 import org.junit.jupiter.api.Nested;
 import org.mockito.InjectMocks;
@@ -53,12 +49,15 @@ class IncidentServiceImplTest {
 
     @Mock
     private CompanyRepository companyRepository;
-    
+
     @Mock
     private CommentRepository commentRepository;
 
     @InjectMocks
     private IncidentServiceImpl incidentService;
+
+    @Mock
+    private IncidentStatusHistoryRepository incidentStatusHistoryRepository;
 
     private Incident incident;
     private IncidentResponse response;
@@ -66,6 +65,8 @@ class IncidentServiceImplTest {
     private Category category;
     private Company company;
     private User companyUser;
+    ArgumentCaptor<IncidentStatusHistory> historyCaptor =
+            ArgumentCaptor.forClass(IncidentStatusHistory.class);
 
 
     @BeforeEach
@@ -76,6 +77,7 @@ class IncidentServiceImplTest {
                 .build();
 
         companyUser = new User();
+        companyUser.setId(2L);
         companyUser.setCompany(company);
 
         citizen = User.builder()
@@ -158,7 +160,7 @@ class IncidentServiceImplTest {
     @Test
     void findById_shouldThrowException_whenIdNegative() {
         assertThatThrownBy(() -> incidentService.findById(-1L))
-                .isInstanceOf( IllegalArgumentException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -178,7 +180,7 @@ class IncidentServiceImplTest {
     @Test
     void findAllByStatus_shouldThrowException_whenStatusNull() {
         assertThatThrownBy(() -> incidentService.findAllByStatus(null))
-                .isInstanceOf( InvalidStatusException.class);
+                .isInstanceOf(InvalidStatusException.class);
 
     }
 
@@ -271,8 +273,16 @@ class IncidentServiceImplTest {
 
         IncidentResponse result = incidentService.create(request, citizenId);
         assertThat(result).isEqualTo(response);
-        verify(incidentRepository)
-                .save(any(Incident.class));
+
+        verify(incidentRepository).save(any(Incident.class));
+        verify(incidentStatusHistoryRepository).save(historyCaptor.capture());
+        IncidentStatusHistory history = historyCaptor.getValue();
+        assertThat(history.getIncident()).isEqualTo(incident);
+        assertThat(history.getOldStatus()).isNull();
+        assertThat(history.getNewStatus()).isEqualTo(IncidentStatus.NEW);
+        assertThat(history.getChangedBy()).isEqualTo(citizen);
+        assertThat(history.getRemarks())
+                .isEqualTo("New incident has been created");
 
     }
 
@@ -338,6 +348,8 @@ class IncidentServiceImplTest {
                     .companyId(1L)
                     .build();
 
+            User manager = User.builder().id(20L).role(Role.MANAGER).build();
+
             when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
                     .thenReturn(Optional.of(incident));
             when(companyRepository.findById(1L))
@@ -346,8 +358,9 @@ class IncidentServiceImplTest {
                     .thenReturn(incident);
             when(incidentMapper.toResponse(incident))
                     .thenReturn(new IncidentResponse());
+            when(userRepository.findById(20L)).thenReturn(Optional.of(manager));
 
-            IncidentResponse response = incidentService.assignToCompany(10L, request);
+            IncidentResponse response = incidentService.assignToCompany(10L, request, 20L);
 
             assertThat(response).isNotNull();
             assertThat(incident.getStatus()).isEqualTo(IncidentStatus.ASSIGNED);
@@ -364,7 +377,7 @@ class IncidentServiceImplTest {
             when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request))
+            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request, 20L))
                     .isInstanceOf(IncidentNotFoundException.class);
 
             verifyNoInteractions(companyRepository);
@@ -381,7 +394,7 @@ class IncidentServiceImplTest {
             when(companyRepository.findById(99L))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request))
+            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request, 20L))
                     .isInstanceOf(CompanyNotFoundException.class);
 
             verify(incidentRepository, never()).save(any());
@@ -393,7 +406,7 @@ class IncidentServiceImplTest {
                     .companyId(null)
                     .build();
 
-            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request))
+            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request, 20L))
                     .isInstanceOf(InvalidIncidentException.class);
 
             verifyNoInteractions(incidentRepository);
@@ -405,10 +418,46 @@ class IncidentServiceImplTest {
                     .companyId(1L)
                     .build();
 
-            assertThatThrownBy(() -> incidentService.assignToCompany(0L, request))
+            assertThatThrownBy(() -> incidentService.assignToCompany(0L, request, 20L))
                     .isInstanceOf(IllegalArgumentException.class);
 
             verifyNoInteractions(incidentRepository);
+        }
+
+        @Test
+        void throwsWhenIncidentAlreadyAssigned() {
+            incident.setStatus(IncidentStatus.ASSIGNED);
+
+            AssignIncidentRequest request = AssignIncidentRequest.builder()
+                    .companyId(1L)
+                    .build();
+
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
+                    .thenReturn(Optional.of(incident));
+
+            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request, 20L))
+                    .isInstanceOf(InvalidIncidentException.class)
+                    .hasMessageContaining("already been assigned");
+
+            verifyNoInteractions(companyRepository);
+        }
+
+        @Test
+        void throwsWhenIncidentAlreadyResolved() {
+            incident.setStatus(IncidentStatus.RESOLVED);
+
+            AssignIncidentRequest request = AssignIncidentRequest.builder()
+                    .companyId(1L)
+                    .build();
+
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
+                    .thenReturn(Optional.of(incident));
+
+            assertThatThrownBy(() -> incidentService.assignToCompany(10L, request, 20L))
+                    .isInstanceOf(InvalidIncidentException.class)
+                    .hasMessageContaining("Resolved incidents cannot be assigned");
+
+            verifyNoInteractions(companyRepository);
         }
     }
 
@@ -428,10 +477,15 @@ class IncidentServiceImplTest {
                     .thenReturn(Optional.of(incident));
             when(userRepository.findByEmail("worker@fixit.com"))
                     .thenReturn(Optional.of(companyUser));
+            when(incidentRepository.save(any(Incident.class)))
+                    .thenReturn(incident);
+            when(userRepository.findById(2L))
+                    .thenReturn(Optional.of(companyUser));
             when(incidentMapper.toResponse(incident))
                     .thenReturn(new IncidentResponse());
 
             IncidentResponse response = incidentService.resolveByCompany(10L, request, "worker@fixit.com");
+
 
             assertThat(response).isNotNull();
             assertThat(incident.getStatus()).isEqualTo(IncidentStatus.RESOLVED);
@@ -469,6 +523,8 @@ class IncidentServiceImplTest {
             ResolveIncidentRequest request = ResolveIncidentRequest.builder()
                     .comment("Fixed it")
                     .build();
+            incident.setStatus(IncidentStatus.ASSIGNED);
+            incident.setAssignedCompany(company);
 
             when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
                     .thenReturn(Optional.of(incident));
@@ -489,12 +545,10 @@ class IncidentServiceImplTest {
 
             when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
                     .thenReturn(Optional.of(incident));
-            when(userRepository.findByEmail("worker@fixit.com"))
-                    .thenReturn(Optional.of(companyUser));
 
             assertThatThrownBy(() -> incidentService.resolveByCompany(10L, request, "worker@fixit.com"))
                     .isInstanceOf(InvalidIncidentException.class)
-                    .hasMessageContaining("Only the assigned company");
+                    .hasMessageContaining("Incident must be assigned before it can be resolved.");
 
             verify(incidentRepository, never()).save(any());
         }
@@ -502,6 +556,7 @@ class IncidentServiceImplTest {
         @Test
         void throwsWhenUserBelongsToDifferentCompany() {
             Company otherCompany = Company.builder().companyId(2L).companyName("Other Co").build();
+            incident.setStatus(IncidentStatus.ASSIGNED);
             incident.setAssignedCompany(company);
 
             User otherCompanyUser = new User();
@@ -524,6 +579,7 @@ class IncidentServiceImplTest {
 
         @Test
         void throwsWhenResolvingUserHasNoCompany() {
+            incident.setStatus(IncidentStatus.ASSIGNED);
             incident.setAssignedCompany(company);
 
             User citizenUser = new User();
@@ -541,5 +597,226 @@ class IncidentServiceImplTest {
             assertThatThrownBy(() -> incidentService.resolveByCompany(10L, request, "citizen@mail.com"))
                     .isInstanceOf(InvalidIncidentException.class);
         }
+
+        @Test
+        void throwsWhenIncidentNotAssigned() {
+            incident.setStatus(IncidentStatus.NEW);
+
+            ResolveIncidentRequest request = ResolveIncidentRequest.builder()
+                    .comment("Fixed it")
+                    .build();
+
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
+                    .thenReturn(Optional.of(incident));
+
+            assertThatThrownBy(() ->
+                    incidentService.resolveByCompany(10L, request, "worker@fixit.com"))
+                    .isInstanceOf(InvalidIncidentException.class)
+                    .hasMessageContaining("must be assigned");
+
+            verifyNoInteractions(userRepository);
+        }
+        @Test
+        void throwsWhenIncidentAlreadyResolved() {
+            incident.setStatus(IncidentStatus.RESOLVED);
+
+            ResolveIncidentRequest request = ResolveIncidentRequest.builder()
+                    .comment("Done")
+                    .build();
+
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(10L))
+                    .thenReturn(Optional.of(incident));
+
+            assertThatThrownBy(() ->
+                    incidentService.resolveByCompany(10L, request, "worker@fixit.com"))
+                    .isInstanceOf(InvalidIncidentException.class)
+                    .hasMessageContaining("already been resolved");
+        }
+    }
+    @Nested
+    class getStatusHistory{
+
+    @Test
+    void getStatusHistory_shouldReturnHistory() {
+        IncidentStatusHistory history = IncidentStatusHistory.builder()
+                .incident(incident)
+                .oldStatus(IncidentStatus.NEW)
+                .newStatus(IncidentStatus.ASSIGNED)
+                .remarks("Assigned")
+                .build();
+
+        IncidentStatusHistoryResponse response =
+                new IncidentStatusHistoryResponse();
+
+        when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                .thenReturn(Optional.of(incident));
+
+        when(incidentStatusHistoryRepository
+                .findAllByIncident_IncidentIdOrderByChangedAtAsc(1L))
+                .thenReturn(List.of(history));
+
+        when(incidentMapper.toStatusHistoryResponse(history, true))
+                .thenReturn(response);
+
+        List<IncidentStatusHistoryResponse> result =
+                incidentService.getStatusHistory(1L, 20L, Role.MANAGER);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst()).isEqualTo(response);
+
+        verify(incidentStatusHistoryRepository)
+                .findAllByIncident_IncidentIdOrderByChangedAtAsc(1L);
+    }
+
+    @Test
+    void getStatusHistory_shouldThrowWhenIncidentNotFound() {
+
+        when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                incidentService.getStatusHistory(1L, 20L, Role.MANAGER))
+                .isInstanceOf(IncidentNotFoundException.class);
+    }
+
+    @Test
+    void getStatusHistory_shouldHideChangedByForCitizen() {
+
+        IncidentStatusHistory history = IncidentStatusHistory.builder()
+                .incident(incident)
+                .build();
+
+        IncidentStatusHistoryResponse response =
+                new IncidentStatusHistoryResponse();
+
+        when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                .thenReturn(Optional.of(incident));
+
+        when(incidentStatusHistoryRepository
+                .findAllByIncident_IncidentIdOrderByChangedAtAsc(1L))
+                .thenReturn(List.of(history));
+
+        when(incidentMapper.toStatusHistoryResponse(history, false))
+                .thenReturn(response);
+
+        incidentService.getStatusHistory(1L, 1L, Role.CITIZEN);
+
+        verify(incidentMapper)
+                .toStatusHistoryResponse(history, false);
+    }
+
+
+    @Test
+    void getStatusHistory_shouldIncludeChangedByForManager() {
+
+        IncidentStatusHistory history = IncidentStatusHistory.builder()
+                .incident(incident)
+                .build();
+
+        IncidentStatusHistoryResponse response =
+                new IncidentStatusHistoryResponse();
+
+        when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                .thenReturn(Optional.of(incident));
+
+        when(incidentStatusHistoryRepository
+                .findAllByIncident_IncidentIdOrderByChangedAtAsc(1L))
+                .thenReturn(List.of(history));
+
+        when(incidentMapper.toStatusHistoryResponse(history, true))
+                .thenReturn(response);
+
+        incidentService.getStatusHistory(1L, 20L, Role.MANAGER);
+
+        verify(incidentMapper)
+                .toStatusHistoryResponse(history, true);
+    }
+    }
+
+    @Nested
+    class GetComments {
+
+        @Test
+        void getComments_shouldReturnComments() {
+            Comment comment = Comment.builder()
+                    .commentId(1L)
+                    .incident(incident)
+                    .comment("Work completed")
+                    .build();
+
+            CommentResponse commentResponse = CommentResponse.builder()
+                    .commentId(1L)
+                    .incidentId(1L)
+                    .comment("Work completed")
+                    .authorName("Jane Smith")
+                    .authorRole("COMPANY")
+                    .build();
+
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                    .thenReturn(Optional.of(incident));
+            when(commentRepository.findAllByIncident_IncidentIdOrderByCreatedAtAsc(1L))
+                    .thenReturn(List.of(comment));
+            when(incidentMapper.toCommentResponse(comment))
+                    .thenReturn(commentResponse);
+
+            List<CommentResponse> result = incidentService.getComments(1L);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.getFirst()).isEqualTo(commentResponse);
+            verify(commentRepository).findAllByIncident_IncidentIdOrderByCreatedAtAsc(1L);
+            verify(incidentMapper).toCommentResponse(comment);
+        }
+
+        @Test
+        void getComments_shouldReturnEmptyListWhenNoComments() {
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                    .thenReturn(Optional.of(incident));
+            when(commentRepository.findAllByIncident_IncidentIdOrderByCreatedAtAsc(1L))
+                    .thenReturn(List.of());
+
+            List<CommentResponse> result = incidentService.getComments(1L);
+
+            assertThat(result).isEmpty();
+            verify(commentRepository).findAllByIncident_IncidentIdOrderByCreatedAtAsc(1L);
+            verify(incidentMapper, never()).toCommentResponse(any());
+        }
+
+        @Test
+        void getComments_shouldThrowWhenIncidentNotFound() {
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                    .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> incidentService.getComments(1L))
+                    .isInstanceOf(IncidentNotFoundException.class)
+                    .hasMessageContaining("Incident not found");
+
+            verify(commentRepository, never())
+                    .findAllByIncident_IncidentIdOrderByCreatedAtAsc(anyLong());
+        }
+
+        @Test
+        void getComments_shouldThrowWhenIdIsInvalid() {
+            assertThatThrownBy(() -> incidentService.getComments(0L))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Invalid id");
+
+            assertThatThrownBy(() -> incidentService.getComments(null))
+                    .isInstanceOf(IllegalArgumentException.class);
+
+            verifyNoInteractions(commentRepository);
+        }
+
+        @Test
+        void getComments_shouldPropagateRepositoryError() {
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                    .thenReturn(Optional.of(incident));
+            when(commentRepository.findAllByIncident_IncidentIdOrderByCreatedAtAsc(1L))
+                    .thenThrow(new RuntimeException("DB connection failed"));
+
+            assertThatThrownBy(() -> incidentService.getComments(1L))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("DB connection failed");
+        }
     }
 }
+

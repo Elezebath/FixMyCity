@@ -3,12 +3,10 @@ package lv.acnbootcamp.fixmycity.service.impl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
-import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
-import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
-import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
+import lv.acnbootcamp.fixmycity.dto.incident.*;
 import lv.acnbootcamp.fixmycity.entity.*;
 import lv.acnbootcamp.fixmycity.entity.incident.*;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
 import lv.acnbootcamp.fixmycity.entity.user.User;
 import lv.acnbootcamp.fixmycity.exception.incident.IncidentNotFoundException;
 import lv.acnbootcamp.fixmycity.exception.incident.InvalidIncidentException;
@@ -41,6 +39,7 @@ public class IncidentServiceImpl implements IncidentService {
     private final AttachmentRepository attachmentRepository;
     private final CompanyRepository companyRepository;
     private final CommentRepository commentRepository;
+    private final IncidentStatusHistoryRepository incidentStatusHistoryRepository;
 
     /**
      * Find all active incidents
@@ -222,11 +221,14 @@ public class IncidentServiceImpl implements IncidentService {
             }
         }
 
+        recordStatusChange(savedIncident, null, IncidentStatus.NEW, citizenId,
+                "New incident has been created");
+
         return incidentMapper.toResponse(savedIncident);
     }
 
     @Transactional
-    public IncidentResponse assignToCompany(Long incidentId, AssignIncidentRequest request) {
+    public IncidentResponse assignToCompany(Long incidentId, AssignIncidentRequest request, Long performedById) {
         validateId(incidentId);
 
         if (request == null || request.getCompanyId() == null) {
@@ -238,16 +240,33 @@ public class IncidentServiceImpl implements IncidentService {
                 .orElseThrow(() -> new IncidentNotFoundException(
                         "Incident not found with id: " + incidentId));
 
+        if (incident.getStatus() == IncidentStatus.RESOLVED) {
+            throw new InvalidIncidentException(
+                    "Resolved incidents cannot be assigned."
+            );
+        }
+
+        if (incident.getStatus() == IncidentStatus.ASSIGNED) {
+            throw new InvalidIncidentException(
+                    "Incident has already been assigned."
+            );
+        }
+
         Company company = companyRepository
                 .findById(request.getCompanyId())
                 .orElseThrow(() -> new CompanyNotFoundException(
                         "Company not found with id: " + request.getCompanyId()));
+
+        IncidentStatus oldStatus = incident.getStatus();
 
         incident.setAssignedCompany(company);
         incident.setStatus(IncidentStatus.ASSIGNED);
 
         Incident savedIncident = incidentRepository.save(incident);
         log.info("Incident {} assigned to company {}", incidentId, request.getCompanyId());
+
+        recordStatusChange(savedIncident, oldStatus, IncidentStatus.ASSIGNED, performedById,
+                "Assigned to company: " + company.getCompanyName());
 
         return incidentMapper.toResponse(savedIncident);
     }
@@ -265,6 +284,18 @@ public class IncidentServiceImpl implements IncidentService {
                 .orElseThrow(() -> new IncidentNotFoundException(
                         "Incident not found with id: " + incidentId));
 
+        if (incident.getStatus() == IncidentStatus.RESOLVED) {
+            throw new InvalidIncidentException(
+                    "Incident has already been resolved."
+            );
+        }
+
+        if (incident.getStatus() != IncidentStatus.ASSIGNED) {
+            throw new InvalidIncidentException(
+                    "Incident must be assigned before it can be resolved."
+            );
+        }
+
         User resolvedBy = userRepository.findByEmail(resolvedByEmail)
                 .orElseThrow(() -> new UserNotFoundException(
                         "User not found with email: " + resolvedByEmail));
@@ -275,22 +306,28 @@ public class IncidentServiceImpl implements IncidentService {
             throw new InvalidIncidentException("Only the assigned company can resolve this incident");
         }
 
+        IncidentStatus oldStatus = incident.getStatus();
+
         incident.setStatus(IncidentStatus.RESOLVED);
         incident.setResolvedAt(LocalDateTime.now());
-        incidentRepository.save(incident);
+        Incident savedIncident = incidentRepository.save(incident);
 
         Comment comment = Comment.builder()
-                .incident(incident)
+                .incident(savedIncident)
                 .user(resolvedBy)
                 .comment(request.getComment())
                 .build();
 
         commentRepository.save(comment);
 
+        recordStatusChange(savedIncident, oldStatus, IncidentStatus.RESOLVED, resolvedBy.getId(),
+                "Incident has been resolved");
+
         log.info("Incident {} resolved by {}", incidentId, resolvedByEmail);
 
-        return incidentMapper.toResponse(incident);
+        return incidentMapper.toResponse(savedIncident);
     }
+
 
     /**
      * Validate the create incident request
@@ -324,4 +361,73 @@ public class IncidentServiceImpl implements IncidentService {
         }
     }
 
+    /**
+     * Get status history for an incident
+     */
+    public List<IncidentStatusHistoryResponse> getStatusHistory(Long incidentId, Long requesterId, Role requesterRole) {
+        validateId(incidentId);
+
+        incidentRepository.findByIncidentIdAndSoftDeletedFalse(incidentId)
+                .orElseThrow(() -> new IncidentNotFoundException(
+                        "Incident not found with id: " + incidentId));
+
+        // Citizens (and unauthenticated callers) must not see who changed the status
+        boolean includeChangedBy = requesterRole != null && requesterRole != Role.CITIZEN;
+
+        log.info("Fetching status history for incident {} (requester id: {}, role: {})",
+                incidentId, requesterId, requesterRole);
+
+        return incidentStatusHistoryRepository
+                .findAllByIncident_IncidentIdOrderByChangedAtAsc(incidentId)
+                .stream()
+                .map(history -> incidentMapper.toStatusHistoryResponse(history, includeChangedBy))
+                .toList();
+    }
+
+    /**
+     * Get all comments for an incident, ordered by creation time ascending.
+     * Access is restricted at the security layer to ADMIN, MANAGER, and COMPANY roles.
+     */
+    @Override
+    public List<CommentResponse> getComments(Long incidentId) {
+        validateId(incidentId);
+
+        incidentRepository.findByIncidentIdAndSoftDeletedFalse(incidentId)
+                .orElseThrow(() -> new IncidentNotFoundException(
+                        "Incident not found with id: " + incidentId));
+
+        log.info("Fetching comments for incident {}", incidentId);
+
+        return commentRepository
+                .findAllByIncident_IncidentIdOrderByCreatedAtAsc(incidentId)
+                .stream()
+                .map(incidentMapper::toCommentResponse)
+                .toList();
+    }
+
+
+    private void recordStatusChange(Incident incident, IncidentStatus oldStatus, IncidentStatus newStatus,
+                                    Long changedById, String remarks) {
+        if (oldStatus == newStatus) {
+            log.debug("Skipping status history for incident {}: status unchanged ({})",
+                    incident.getIncidentId(), newStatus);
+            return;
+        }
+
+        User changedBy = userRepository.findById(changedById)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + changedById));
+
+        IncidentStatusHistory history = IncidentStatusHistory.builder()
+                .incident(incident)
+                .changedBy(changedBy)
+                .oldStatus(oldStatus)
+                .newStatus(newStatus)
+                .remarks(remarks)
+                .build();
+
+        incidentStatusHistoryRepository.save(history);
+        log.info("Recorded status change for incident {}: {} -> {} by user id {}",
+                incident.getIncidentId(), oldStatus, newStatus, changedById);
+    }
 }
+

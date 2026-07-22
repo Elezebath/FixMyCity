@@ -25,8 +25,7 @@ import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -215,7 +214,7 @@ class UserAdminControllerTest {
                     .build();
 
             when(userService.createUser(
-                    eq("new@example.com"), eq("plainPassword123"), eq("New Person"), eq(Role.MANAGER)))
+                    eq("new@example.com"), eq("plainPassword123"), eq("New Person"), eq(Role.MANAGER), isNull()))
                     .thenReturn(created);
 
             mockMvc.perform(post("/api/admin/users")
@@ -262,7 +261,7 @@ class UserAdminControllerTest {
             request.setFullName("Someone");
             request.setRole(Role.CITIZEN);
 
-            when(userService.createUser(any(), any(), any(), any()))
+            when(userService.createUser(any(), any(), any(), any(), any()))
                     .thenThrow(new EmailAlreadyExistsException("taken@example.com"));
 
             mockMvc.perform(post("/api/admin/users")

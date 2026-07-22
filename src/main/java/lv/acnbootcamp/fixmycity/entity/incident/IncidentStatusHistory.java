@@ -9,7 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "incident_assignments")
+@Table(name = "incident_status_history")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,7 +20,7 @@ public class IncidentStatusHistory extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long assignmentId;
+    private Long statusHistoryId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "incident_id", nullable = false)
@@ -31,7 +31,7 @@ public class IncidentStatusHistory extends BaseEntity {
     private User changedBy;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "old_status", nullable = false)
+    @Column(name = "old_status", nullable = true)
     private IncidentStatus oldStatus;
 
     @Enumerated(EnumType.STRING)

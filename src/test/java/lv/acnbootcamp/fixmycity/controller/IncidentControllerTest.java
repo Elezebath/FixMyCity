@@ -2,8 +2,10 @@ package lv.acnbootcamp.fixmycity.controller;
 
 import lv.acnbootcamp.fixmycity.config.SecurityConfig;
 import lv.acnbootcamp.fixmycity.dto.incident.AttachmentResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.CommentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
+
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatus;
 import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
@@ -26,6 +28,8 @@ import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
 import lv.acnbootcamp.fixmycity.security.JwtAuthenticationFilter;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -36,6 +40,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -370,6 +375,145 @@ class IncidentControllerTest {
             mockMvc.perform(get("/api/incidents/citizen/999"))
                     .andExpect(status().isNotFound());
         }
+    }
+
+    @Nested
+    @DisplayName("GET /api/incidents/my - Find My Incidents Tests")
+    class FindMyIncidentsTests {
+
+        @Test
+        @DisplayName("Should return 401 when not authenticated")
+        void shouldReturn401WhenNotAuthenticated() throws Exception {
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isUnauthorized());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @Test
+        @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
+        @DisplayName("Should resolve citizen id from authenticated user, not from request")
+        void shouldResolveCitizenIdFromAuthenticatedUser() throws Exception {
+            when(userRepository.findByEmail("testuser@test.com"))
+                    .thenReturn(Optional.of(testCitizen));
+            when(incidentService.findAllByCitizen(10L))
+                    .thenReturn(List.of(createResponse(1L)));
+
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(1))
+                    .andExpect(jsonPath("$[0].citizenId").value(10));
+
+            // Critical isolation check: service is called with the ID resolved
+            // from the JWT principal, never an arbitrary/client-supplied one.
+            verify(incidentService, times(1)).findAllByCitizen(10L);
+            verify(incidentService, never()).findAllByCitizen(argThat(id -> id != null && !id.equals(10L)));
+        }
+
+        @Test
+        @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
+        @DisplayName("Should return empty list when citizen has no incidents")
+        void shouldReturnEmptyListWhenCitizenHasNoIncidents() throws Exception {
+            when(userRepository.findByEmail("testuser@test.com"))
+                    .thenReturn(Optional.of(testCitizen));
+            when(incidentService.findAllByCitizen(10L)).thenReturn(List.of());
+
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(0));
+        }
+
+        @Test
+        @WithMockUser(username = "ghost@test.com", roles = "CITIZEN")
+        @DisplayName("Should return 401 when authenticated user not found in database")
+        void shouldReturn401WhenUserNotFoundInDatabase() throws Exception {
+            when(userRepository.findByEmail("ghost@test.com")).thenReturn(Optional.empty());
+
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isUnauthorized());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @Test
+        @WithMockUser(username = "manager@test.com", roles = "MANAGER")
+        @DisplayName("Should work for MANAGER role too, returning only their own reported incidents")
+        void shouldWorkForManagerRole() throws Exception {
+            User managerUser = User.builder()
+                    .id(20L)
+                    .email("manager@test.com")
+                    .role(Role.MANAGER)
+                    .build();
+
+            when(userRepository.findByEmail("manager@test.com"))
+                    .thenReturn(Optional.of(managerUser));
+            when(incidentService.findAllByCitizen(20L)).thenReturn(List.of());
+
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isOk());
+
+            verify(incidentService).findAllByCitizen(20L);
+        }
+
+        @Test
+        @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
+        @DisplayName("Should return multiple incidents in service order")
+        void shouldReturnMultipleIncidents() throws Exception {
+            when(userRepository.findByEmail("testuser@test.com"))
+                    .thenReturn(Optional.of(testCitizen));
+            when(incidentService.findAllByCitizen(10L))
+                    .thenReturn(List.of(createResponse(1L), createResponse(2L), createResponse(3L)));
+
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(3));
+
+            verify(incidentService).findAllByCitizen(10L);
+        }
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
+    @DisplayName("Should include assigned company, resolution date and latest comment in response")
+    void shouldIncludeAssignmentResolutionAndCommentDetails() throws Exception {
+        when(userRepository.findByEmail("testuser@test.com"))
+                .thenReturn(Optional.of(testCitizen));
+
+        IncidentResponse resolved = IncidentResponse.builder()
+                .incidentId(5L)
+                .citizenId(10L)
+                .title("Broken bench")
+                .status("RESOLVED")
+                .assignedCompanyName("FixIt Co.")
+                .resolvedAt(java.time.LocalDateTime.of(2026, 7, 18, 16, 0))
+                .latestComment("Bench repaired and reinstalled.")
+                .latestCommentBy("Jane Smith")
+                .build();
+
+        when(incidentService.findAllByCitizen(10L)).thenReturn(List.of(resolved));
+
+        mockMvc.perform(get("/api/incidents/my"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].assignedCompanyName").value("FixIt Co."))
+                .andExpect(jsonPath("$[0].resolvedAt").exists())
+                .andExpect(jsonPath("$[0].latestComment").value("Bench repaired and reinstalled."))
+                .andExpect(jsonPath("$[0].latestCommentBy").value("Jane Smith"));
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@test.com", roles = "CITIZEN")
+    @DisplayName("Should omit company, resolution date and comment when incident not yet assigned")
+    void shouldOmitOptionalFieldsWhenIncidentIsNew() throws Exception {
+        when(userRepository.findByEmail("testuser@test.com"))
+                .thenReturn(Optional.of(testCitizen));
+
+        when(incidentService.findAllByCitizen(10L)).thenReturn(List.of(createResponse(6L)));
+
+        mockMvc.perform(get("/api/incidents/my"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].assignedCompanyName").doesNotExist())
+                .andExpect(jsonPath("$[0].resolvedAt").doesNotExist())
+                .andExpect(jsonPath("$[0].latestComment").doesNotExist());
     }
 
     @Nested
@@ -789,17 +933,22 @@ class IncidentControllerTest {
         }
 
         @Test
-        @WithMockUser(roles = "MANAGER")
+        @WithMockUser(username = "manager@test.com", roles = "MANAGER")
         void returns200WhenRoleIsManager() throws Exception {
             AssignIncidentRequest request = AssignIncidentRequest.builder().companyId(1L).build();
 
-            when(incidentService.assignToCompany(anyLong(), any(AssignIncidentRequest.class)))
+            User managerUser = User.builder().id(20L).role(Role.MANAGER).build();
+            when(userRepository.findByEmail("manager@test.com")).thenReturn(java.util.Optional.of(managerUser));
+
+            when(incidentService.assignToCompany(anyLong(), any(AssignIncidentRequest.class), eq(20L)))
                     .thenReturn(new IncidentResponse());
 
             mockMvc.perform(patch("/api/incidents/10/assign")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(jsonMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
+
+            verify(incidentService).assignToCompany(eq(10L), any(AssignIncidentRequest.class), eq(20L));
         }
 
         @Test
@@ -913,4 +1062,144 @@ class IncidentControllerTest {
                     .andExpect(status().isBadRequest());
         }
     }
+
+    @Nested
+    @DisplayName("GET /api/incidents/{id}/comments - Get Comments Tests")
+    class GetCommentsEndpoint {
+
+        private CommentResponse createSampleComment() {
+            return CommentResponse.builder()
+                    .commentId(1L)
+                    .incidentId(10L)
+                    .comment("Replaced the light fixture.")
+                    .authorName("Jane Smith")
+                    .authorRole("COMPANY")
+                    .build();
+        }
+
+        @Test
+        void returns401WhenUnauthenticated() throws Exception {
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isUnauthorized());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"CITIZEN", "MANAGER", "ADMIN", "COMPANY"})
+        void returns200WhenRoleIsAuthorized(String role) throws Exception {
+            when(incidentService.getComments(10L))
+                    .thenReturn(List.of(createSampleComment()));
+
+            mockMvc.perform(get("/api/incidents/10/comments")
+                            .with(user("testuser").roles(role)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.length()").value(1))
+                    .andExpect(jsonPath("$[0].commentId").value(1))
+                    .andExpect(jsonPath("$[0].incidentId").value(10))
+                    .andExpect(jsonPath("$[0].comment").value("Replaced the light fixture."))
+                    .andExpect(jsonPath("$[0].authorName").value("Jane Smith"))
+                    .andExpect(jsonPath("$[0].authorRole").value("COMPANY"));
+
+            verify(incidentService).getComments(10L);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returnsMultipleCommentsInCorrectOrder() throws Exception {
+            CommentResponse first = createSampleComment(); // commentId 1
+            CommentResponse second = CommentResponse.builder()
+                    .commentId(2L).incidentId(10L)
+                    .comment("Second comment")
+                    .authorName("John Doe")
+                    .authorRole("MANAGER")
+                    .build();// commentId 2
+
+            when(incidentService.getComments(10L))
+                    .thenReturn(List.of(first, second));
+
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.length()").value(2))
+                    .andExpect(jsonPath("$[0].commentId").value(1))
+                    .andExpect(jsonPath("$[0].incidentId").value(10))
+                    .andExpect(jsonPath("$[0].comment").value("Replaced the light fixture."))
+                    .andExpect(jsonPath("$[0].authorName").value("Jane Smith"))
+                    .andExpect(jsonPath("$[0].authorRole").value("COMPANY"))
+                    .andExpect(jsonPath("$[1].authorName").value("John Doe"))
+                    .andExpect(jsonPath("$[1].commentId").value(2))
+                    .andExpect(jsonPath("$[1].incidentId").value(10))
+                    .andExpect(jsonPath("$[1].comment").value("Second comment"))
+                    .andExpect(jsonPath("$[1].authorRole").value("MANAGER"));
+
+            verify(incidentService).getComments(10L);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returnsEmptyListWhenNoComments() throws Exception {
+            when(incidentService.getComments(10L))
+                    .thenReturn(List.of());
+
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(0));
+
+            verify(incidentService).getComments(10L);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns404WhenIncidentNotFound() throws Exception {
+            when(incidentService.getComments(999L))
+                    .thenThrow(new IncidentNotFoundException("Incident not found with id: 999"));
+
+            mockMvc.perform(get("/api/incidents/999/comments"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error").value("Incident not found with id: 999"));
+
+            verify(incidentService).getComments(999L);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns400WhenIdIsZero() throws Exception {
+            mockMvc.perform(get("/api/incidents/0/comments"))
+                    .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns400WhenIdIsNegative() throws Exception {
+            mockMvc.perform(get("/api/incidents/-1/comments"))
+                    .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns400WhenIdIsNotNumeric() throws Exception {
+            mockMvc.perform(get("/api/incidents/abc/comments"))
+                    .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns500WhenServiceThrowsUnexpectedError() throws Exception {
+            when(incidentService.getComments(10L))
+                    .thenThrow(new RuntimeException("Unexpected error"));
+
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.error").value("An unexpected error occurred"));
+        }
+    }
 }
+

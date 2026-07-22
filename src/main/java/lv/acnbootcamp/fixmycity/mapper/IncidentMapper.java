@@ -2,10 +2,15 @@ package lv.acnbootcamp.fixmycity.mapper;
 
 import lombok.extern.slf4j.Slf4j;
 import lv.acnbootcamp.fixmycity.dto.incident.AttachmentResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.CommentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.IncidentStatusHistoryResponse;
 import lv.acnbootcamp.fixmycity.entity.incident.Attachment;
+import lv.acnbootcamp.fixmycity.entity.incident.Comment;
 import lv.acnbootcamp.fixmycity.entity.incident.Incident;
+import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatusHistory;
 import org.springframework.stereotype.Component;
+
 
 @Slf4j
 @Component
@@ -23,6 +28,11 @@ public class IncidentMapper {
             log.warn("Attempted to map null incident");
             return null;
         }
+
+        Comment latestComment = (incident.getComments() != null && !incident.getComments().isEmpty())
+                ? incident.getComments().getFirst()
+                : null;
+
         return IncidentResponse.builder()
                 .incidentId(incident.getIncidentId())
                 .title(incident.getTitle())
@@ -45,9 +55,20 @@ public class IncidentMapper {
                 .createdAt(incident.getCreatedAt())
                 .attachment(
                         incident.getAttachments() != null && !incident.getAttachments().isEmpty() ? toAttachmentResponse(
-                                incident.getAttachments().get(0)
+                                incident.getAttachments().getFirst()
                         ) : null
                 )
+                .assignedCompanyName(
+                        incident.getAssignedCompany() != null ? incident.getAssignedCompany().getCompanyName() : null
+                )
+                .resolvedAt(incident.getResolvedAt())
+                .latestComment(latestComment != null ? latestComment.getComment() : null)
+                .latestCommentBy(
+                        latestComment != null && latestComment.getUser() != null
+                                ? latestComment.getUser().getFullName()
+                                : null
+                )
+                .latestCommentAt(latestComment != null ? latestComment.getCreatedAt() : null)
                 .build();
     }
 
@@ -69,4 +90,48 @@ public class IncidentMapper {
                 .filePath(attachment.getFilePath())
                 .build();
     }
+
+    /**
+     * Convert IncidentStatusHistory Entity to IncidentStatusHistoryResponse DTO
+     *
+     * @param history incident status history
+     * @param includeChangedBy whether to include changed by or not
+     * @return IncidentStatusHistoryResponse
+     */
+    public IncidentStatusHistoryResponse toStatusHistoryResponse(IncidentStatusHistory history, boolean includeChangedBy) {
+        return IncidentStatusHistoryResponse.builder()
+                .statusHistoryId(history.getStatusHistoryId())
+                .incidentId(history.getIncident().getIncidentId())
+                .oldStatus(history.getOldStatus())
+                .newStatus(history.getNewStatus())
+                .changedByName(includeChangedBy ? history.getChangedBy().getFullName() : null)
+                .remarks(history.getRemarks())
+                .changedAt(history.getChangedAt())
+                .build();
+    }
+
+    /**
+     * Convert Comment Entity to CommentResponse DTO
+     *
+     * @param comment comment entity
+     * @return CommentResponse
+     */
+    public CommentResponse toCommentResponse(Comment comment) {
+        if (comment == null) {
+            log.warn("Attempted to map null comment");
+            return null;
+        }
+
+        return CommentResponse.builder()
+                .commentId(comment.getCommentId())
+                .incidentId(comment.getIncident() != null ? comment.getIncident().getIncidentId() : null)
+                .comment(comment.getComment())
+                .authorName(comment.getUser() != null ? comment.getUser().getFullName() : null)
+                .authorRole(comment.getUser() != null && comment.getUser().getRole() != null
+                        ? comment.getUser().getRole().name()
+                        : null)
+                .createdAt(comment.getCreatedAt())
+                .build();
+    }
 }
+

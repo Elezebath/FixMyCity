@@ -136,3 +136,52 @@ export async function resolveIncident(id, comment) {
 
     return response.json();
 }
+
+
+/**
+ * GET /api/incidents/{id}/status-history
+ */
+export async function getIncidentStatusHistory(id) {
+    const response = await fetch(`${API_BASE}/${id}/status-history`, {
+        headers: { ...getAuthHeader() },
+    });
+
+    if (!response.ok) {
+        const message = await parseError(response);
+        const err = new Error(message);
+        err.status = response.status;
+        throw err;
+    }
+
+    return response.json();
+}
+
+/**
+ * GET /api/incidents/{id}/comments
+ * Restricted to ADMIN, MANAGER, COMPANY roles on the backend.
+ */
+export async function getIncidentComments(id) {
+    const response = await fetch(`${API_BASE}/${id}/comments`, {
+        headers: { ...getAuthHeader() },
+    });
+
+    if (!response.ok) {
+        const message = await parseError(response);
+        const err = new Error(message);
+        err.status = response.status;
+        throw err;
+    }
+
+    return response.json();
+}
+
+
+export async function getMyIncidents() {
+    const response = await fetch(`${API_BASE}/my`, {
+        headers: { ...getAuthHeader() },
+    });
+    if (!response.ok) {
+        throw new Error(await parseError(response));
+    }
+    return response.json();
+}

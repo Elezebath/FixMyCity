@@ -13,15 +13,19 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
+import lv.acnbootcamp.fixmycity.dto.incident.CommentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.IncidentStatusHistoryResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatus;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
 import lv.acnbootcamp.fixmycity.entity.user.User;
 import lv.acnbootcamp.fixmycity.exception.UnauthorizedException;
 import lv.acnbootcamp.fixmycity.repository.UserRepository;
 import lv.acnbootcamp.fixmycity.service.IncidentService;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -91,6 +95,23 @@ public class IncidentController {
         return incidentService.findById(id);
     }
 
+    @GetMapping("/my")
+    @Operation(
+            summary = "Get incidents reported by the authenticated citizen",
+            description = "Returns incidents reported by the currently authenticated user, resolved from the JWT — not from a client-supplied ID."
+    )
+    @ApiResponse(responseCode = "200", description = "Incidents retrieved successfully")
+    @ApiResponse(responseCode = "401", description = "Unauthorized")
+    public List<IncidentResponse> findMyIncidents(Authentication authentication) {
+
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("User not found with email: " + email));
+
+        log.info("REST request to fetch incidents for authenticated user {}", user.getId());
+        return incidentService.findAllByCitizen(user.getId());
+    }
+
     @GetMapping("/status/{status}")
     @Operation(summary = "Get incidents by status")
     @ApiResponse(responseCode = "200", description = "Incidents retrieved successfully")
@@ -144,19 +165,80 @@ public class IncidentController {
         return incidentService.findAllByCategory(categoryId);
     }
 
+    @GetMapping("/{id}/status-history")
+    @Operation(
+            summary = "Get incident status history",
+            description = "Returns the complete status change history for an incident, ordered by change time. "
+                    + "changedByName is included only for COMPANY, MANAGER, and ADMIN requesters."
+    )
+    @ApiResponse(responseCode = "200", description = "Status history retrieved successfully")
+    @ApiResponse(responseCode = "404", description = "Incident not found")
+    public List<IncidentStatusHistoryResponse> getStatusHistory(
+            @Parameter(description = "Incident ID", example = "1")
+            @PathVariable @Positive(message = "Incident ID must be positive") Long id,
+            Authentication authentication) {
+
+        log.info("REST request to fetch status history for incident {}", id);
+
+        Long requesterId = null;
+        Role requesterRole = null;
+
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() != null
+                && !"anonymousUser".equals(authentication.getPrincipal())) {
+            String email = authentication.getName();
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UnauthorizedException("User not found with email: " + email));
+            requesterId = user.getId();
+            requesterRole = user.getRole();
+        }
+
+        return incidentService.getStatusHistory(id, requesterId, requesterRole);
+    }
+
+    @GetMapping("/{id}/comments")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+            summary = "Get all comments for an incident",
+            description = "Returns all comments for the given incident, ordered by creation time ascending. "
+                    + "Restricted to authenticated users with ADMIN, MANAGER, or COMPANY roles."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Comments retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid incident ID"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden — role not allowed"),
+            @ApiResponse(responseCode = "404", description = "Incident not found")
+    })
+    public List<CommentResponse> getComments(
+            @Parameter(description = "Incident ID", example = "1")
+            @PathVariable @Positive(message = "Incident ID must be positive") Long id) {
+
+        log.info("REST request to fetch comments for incident {}", id);
+        return incidentService.getComments(id);
+    }
+
+
     @PatchMapping("/{id}/assign")
+
     @Operation(
             summary = "Assign incident to company",
             description = "Assigns an existing incident to a company for resolution"
     )
     @ApiResponse(responseCode = "200", description = "Incident assigned successfully")
     @ApiResponse(responseCode = "404", description = "Incident or company not found")
-    public IncidentResponse assignToCompany(
+    public IncidentResponse assignToCompany (
             @PathVariable Long id,
-            @Valid @RequestBody AssignIncidentRequest request) {
+            @Valid @RequestBody AssignIncidentRequest request,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("User not found with email: " + email));
+
 
         log.info("REST request to assign incident {} to company {}", id, request.getCompanyId());
-        return incidentService.assignToCompany(id, request);
+        return incidentService.assignToCompany(id, request, user.getId());
     }
 
     @PatchMapping("/{id}/resolve")

@@ -3,8 +3,11 @@ package lv.acnbootcamp.fixmycity.service;
 import lv.acnbootcamp.fixmycity.dto.user.UserAdminResponse;
 import lv.acnbootcamp.fixmycity.entity.user.Role;
 import lv.acnbootcamp.fixmycity.entity.user.User;
+import lv.acnbootcamp.fixmycity.exception.user.CompanyAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.exception.user.UserNotFoundException;
+import lv.acnbootcamp.fixmycity.repository.CategoryRepository;
+import lv.acnbootcamp.fixmycity.repository.CompanyRepository;
 import lv.acnbootcamp.fixmycity.repository.UserRepository;
 import lv.acnbootcamp.fixmycity.service.AuditLogService;
 import lv.acnbootcamp.fixmycity.service.impl.UserServiceImpl;
@@ -17,6 +20,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import lv.acnbootcamp.fixmycity.dto.company.CompanyCreateRequest;
+import lv.acnbootcamp.fixmycity.entity.Category;
+import lv.acnbootcamp.fixmycity.entity.Company;
+import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
+import lv.acnbootcamp.fixmycity.repository.CategoryRepository;
+import lv.acnbootcamp.fixmycity.repository.CompanyRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,6 +47,12 @@ class UserServiceImplTest {
     // for internal use of userService.createUser(), userService.updateUserRole()
     @Mock
     private AuditLogService auditLogService;
+
+    @Mock
+    private CompanyRepository companyRepository;
+
+    @Mock
+    private CategoryRepository categoryRepository;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -117,6 +132,32 @@ class UserServiceImplTest {
 
             verify(userRepository, never()).save(any());
         }
+
+        @Test
+        void returnsNullCompanyIdWhenUserHasNoCompany(){
+            existingUser.setCompany(null);
+
+            when(userRepository.findById(1L))
+                    .thenReturn(Optional.of(existingUser));
+            UserAdminResponse response = userService.getUserById(1L);
+
+            assertThat(response.getCompanyId()).isNull();
+        }
+
+        @Test
+        void returnsCompanyIdWhenUserHasCompany(){
+            Company company = Company.builder()
+                    .companyId(5L)
+                    .build();
+
+            existingUser.setCompany(company);
+
+            when(userRepository.findById(1L))
+                    .thenReturn(Optional.of(existingUser));
+            UserAdminResponse response = userService.getUserById(1L);
+
+            assertThat(response.getCompanyId()).isEqualTo(5L);
+        }
     }
 
     @Nested
@@ -189,10 +230,12 @@ class UserServiceImplTest {
             });
 
             UserAdminResponse response = userService.createUser(
-                    "new@example.com", "plainPassword", "New Person", Role.MANAGER);
+                    "new@example.com", "plainPassword", "New Person", Role.MANAGER, null);
 
             ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
             verify(userRepository).save(captor.capture());
+            verify(companyRepository, never()).save(any());
+            verify(categoryRepository, never()).findByCategoryIdAndIsDeletedFalse(any());
 
             User saved = captor.getValue();
             assertThat(saved.getPassword()).isEqualTo("encoded-password");
@@ -208,12 +251,126 @@ class UserServiceImplTest {
             when(userRepository.existsByEmail("taken@example.com")).thenReturn(true);
 
             assertThatThrownBy(() ->
-                    userService.createUser("taken@example.com", "pass1234", "Someone", Role.CITIZEN))
+                    userService.createUser("taken@example.com", "pass1234", "Someone", Role.CITIZEN, null))
                     .isInstanceOf(EmailAlreadyExistsException.class)
                     .hasMessageContaining("taken@example.com");
 
             verify(userRepository, never()).save(any());
             verify(passwordEncoder, never()).encode(any());
+        }
+
+        @Test
+        void createsCompanyWhenRoleIsCompany() {
+            CompanyCreateRequest request = new CompanyCreateRequest();
+            request.setCompanyName("Test Company");
+            request.setRegistrationNo("123456");
+            request.setCategoryId(1L);
+            request.setContactEmail("company@test.com");
+            request.setContactPhone("+37120000000");
+            request.setAddress("Riga");
+
+            Category category = Category.builder()
+                    .categoryId(1L)
+                    .name("Roads")
+                    .description("Road issues")
+                    .build();
+
+            when(userRepository.existsByEmail("company@example.com")).thenReturn(false);
+            when(passwordEncoder.encode("password")).thenReturn("encoded");
+
+            when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+                User user = invocation.getArgument(0);
+                user.setId(10L);
+                return user;
+            });
+
+            when(categoryRepository.findByCategoryIdAndIsDeletedFalse(1L))
+                    .thenReturn(Optional.of(category));
+
+            when(companyRepository.save(any(Company.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+
+            userService.createUser(
+                    "company@example.com",
+                    "password",
+                    "Company User",
+                    Role.COMPANY,
+                    request);
+
+            ArgumentCaptor<Company> companyCaptor = ArgumentCaptor.forClass(Company.class);
+
+            verify(companyRepository).save(companyCaptor.capture());
+            verify(categoryRepository).findByCategoryIdAndIsDeletedFalse(1L);
+
+            Company savedCompany = companyCaptor.getValue();
+
+            assertThat(savedCompany.getCompanyName()).isEqualTo("Test Company");
+            assertThat(savedCompany.getRegistrationNo()).isEqualTo("123456");
+            assertThat(savedCompany.getCategory()).isEqualTo(category);
+            assertThat(savedCompany.getUser().getId()).isEqualTo(10L);
+            assertThat(savedCompany.getActive()).isTrue();
+        }
+
+        @Test
+        void throwsCategoryNotFoundExceptionWhenCategoryDoesNotExist() {
+            CompanyCreateRequest request = new CompanyCreateRequest();
+                    request.setCompanyName("Test Company");
+                    request.setRegistrationNo("123456");
+                    request.setCategoryId(99L);
+
+            when(userRepository.existsByEmail("company@example.com")).thenReturn(false);
+            when(passwordEncoder.encode("password")).thenReturn("encoded");
+
+            when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+                User user = invocation.getArgument(0);
+                user.setId(10L);
+                return user;
+            });
+
+            when(categoryRepository.findByCategoryIdAndIsDeletedFalse(99L))
+                    .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() ->
+                    userService.createUser(
+                            "company@example.com",
+                            "password",
+                            "Company User",
+                            Role.COMPANY,
+                            request))
+                    .isInstanceOf(CategoryNotFoundException.class);
+
+            verify(companyRepository, never()).save(any());
+            verify(userRepository).save(any(User.class));
+            verify(companyRepository, never()).save(any());
+        }
+
+        @Test
+        void throwsCompanyAlreadyExistsExceptionWhenCompanyNameAlreadyExists() {
+            CompanyCreateRequest request = new CompanyCreateRequest();
+            request.setCompanyName("Test Company");
+            request.setRegistrationNo("123456");
+            request.setCategoryId(1L);
+            request.setContactEmail("company@test.com");
+            request.setContactPhone("+37120000000");
+            request.setAddress("Riga");
+
+            when(userRepository.existsByEmail("company@example.com")).thenReturn(false);
+
+            when(companyRepository.existsByCompanyNameIgnoreCase("Test Company"))
+                    .thenReturn(true);
+
+            assertThatThrownBy(() ->
+                    userService.createUser(
+                            "company@example.com",
+                            "password",
+                            "Company User",
+                            Role.COMPANY,
+                            request))
+                    .isInstanceOf(CompanyAlreadyExistsException.class);
+
+            verify(userRepository, never()).save(any());
+            verify(categoryRepository, never()).findByCategoryIdAndIsDeletedFalse(any());
+            verify(companyRepository, never()).save(any());
         }
     }
 

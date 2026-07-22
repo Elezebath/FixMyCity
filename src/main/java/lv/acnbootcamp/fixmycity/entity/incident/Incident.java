@@ -66,6 +66,7 @@ public class Incident extends BaseEntity {
     private List<Attachment> attachments = new ArrayList<>();
 
     @OneToMany(mappedBy = "incident")
+    @OrderBy("createdAt DESC")
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 

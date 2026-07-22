@@ -1,11 +1,11 @@
 package lv.acnbootcamp.fixmycity.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lv.acnbootcamp.fixmycity.dto.company.CompanyResponse;
-import lv.acnbootcamp.fixmycity.repository.CompanyRepository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lv.acnbootcamp.fixmycity.dto.company.CompanyUpdateRequest;
+import lv.acnbootcamp.fixmycity.service.CompanyService;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -14,17 +14,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CompanyController {
 
-    private final CompanyRepository companyRepository;
+    private final CompanyService companyService;
 
     @GetMapping
     public List<CompanyResponse> findAll() {
-        return companyRepository.findAllByActiveTrue().stream()
-                .map(c -> CompanyResponse.builder()
-                        .companyId(c.getCompanyId())
-                        .companyName(c.getCompanyName())
-                        .contactEmail(c.getContactEmail())
-                        .active(c.getActive())
-                        .build())
-                .toList();
+        return companyService.findAll();
     }
+
+    @GetMapping("/{companyId}")
+    public CompanyResponse findById(@PathVariable Long companyId) {
+        return companyService.findById(companyId);
+    }
+    @PutMapping("/{companyId}")
+    public CompanyResponse updateCompany(
+            @PathVariable Long companyId,
+            @Valid @RequestBody CompanyUpdateRequest request) {
+        return companyService.updateCompany(companyId, request);
+    }
+
 }

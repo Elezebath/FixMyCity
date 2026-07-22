@@ -1,10 +1,13 @@
 package lv.acnbootcamp.fixmycity.service.impl;
 
+import lv.acnbootcamp.fixmycity.dto.company.CompanyCreateRequest;
 import lv.acnbootcamp.fixmycity.dto.user.UserAdminResponse;
 import lv.acnbootcamp.fixmycity.entity.audit.AuditAction;
 import lv.acnbootcamp.fixmycity.entity.audit.AuditEntityType;
 import lv.acnbootcamp.fixmycity.entity.user.Role;
 import lv.acnbootcamp.fixmycity.entity.user.User;
+import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
+import lv.acnbootcamp.fixmycity.exception.user.CompanyAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.exception.user.UserNotFoundException;
 import lv.acnbootcamp.fixmycity.repository.UserRepository;
@@ -12,6 +15,11 @@ import lv.acnbootcamp.fixmycity.service.AuditLogService;
 import lv.acnbootcamp.fixmycity.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
+import lv.acnbootcamp.fixmycity.entity.Category;
+import lv.acnbootcamp.fixmycity.entity.Company;
+import lv.acnbootcamp.fixmycity.repository.CategoryRepository;
+import lv.acnbootcamp.fixmycity.repository.CompanyRepository;
 
 import java.util.List;
 
@@ -19,13 +27,18 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final CompanyRepository companyRepository;
+    private final CategoryRepository categoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
 
-    public UserServiceImpl(UserRepository userRepository,
+
+    public UserServiceImpl(UserRepository userRepository, CompanyRepository companyRepository, CategoryRepository categoryRepository,
                            PasswordEncoder passwordEncoder,
                            AuditLogService auditLogService) {
         this.userRepository = userRepository;
+        this.companyRepository = companyRepository;
+        this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
     }
@@ -42,10 +55,17 @@ public class UserServiceImpl implements UserService {
         return mapToResponse(findUserOrThrow(id));
     }
 
+    @Transactional
     @Override
-    public UserAdminResponse createUser(String email, String rawPassword, String fullName, Role role) {
+    public UserAdminResponse createUser(String email, String rawPassword, String fullName, Role role, CompanyCreateRequest company) {
         if (userRepository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException(email);
+        }
+
+        if (role == Role.COMPANY && company != null &&
+                companyRepository.existsByCompanyNameIgnoreCase(company.getCompanyName())) {
+            throw new CompanyAlreadyExistsException(
+                    "Company '" + company.getCompanyName() + "' already exists.");
         }
 
         User user = User.builder()
@@ -57,6 +77,27 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User saved = userRepository.save(user);
+        if (role == Role.COMPANY && company != null) {
+
+
+            Category category = categoryRepository
+                    .findByCategoryIdAndIsDeletedFalse(company.getCategoryId())
+                    .orElseThrow(() -> new CategoryNotFoundException(
+                            "Category with id " + company.getCategoryId() + " not found."));
+
+            Company companyEntity = Company.builder()
+                    .user(saved)
+                    .companyName(company.getCompanyName())
+                    .registrationNo(company.getRegistrationNo())
+                    .category(category)
+                    .contactEmail(company.getContactEmail())
+                    .contactPhone(company.getContactPhone())
+                    .address(company.getAddress())
+                    .active(true)
+                    .build();
+
+            companyRepository.save(companyEntity);
+        }
         auditLogService.log(AuditEntityType.USER, saved.getId(), AuditAction.CREATE,
                 "Created user '" + saved.getEmail() + "' with role " + saved.getRole());
         return mapToResponse(saved);
@@ -116,6 +157,11 @@ public class UserServiceImpl implements UserService {
                 .role(user.getRole())
                 .enabled(user.isEnabled())
                 .createdAt(user.getCreatedAt())
+                .companyId(
+                        user.getCompany() != null
+                                ? user.getCompany().getCompanyId()
+                                : null
+                )
                 .build();
     }
 }

@@ -1,14 +1,12 @@
 package lv.acnbootcamp.fixmycity.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lv.acnbootcamp.fixmycity.entity.user.User;
 
 @Entity
 @Table(name = "companies")
+@Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

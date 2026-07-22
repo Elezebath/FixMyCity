@@ -117,6 +117,35 @@ class SecurityConfigTest {
                     .andExpect(status().is(org.hamcrest.Matchers.not(401)));
         }
     }
+    
+    // ---------------------------------------------------------------
+    // Access control for /api/incidents/my
+    // ---------------------------------------------------------------
+
+    @Nested
+    class MyIncidentsAccess {
+
+        @Test
+        void myIncidents_withoutAuth_returns401() throws Exception {
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @WithMockUser(roles = "CITIZEN")
+        void myIncidents_asCitizen_isAccessible() throws Exception {
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void myIncidents_asManager_isAccessible() throws Exception {
+            // No role restriction — any authenticated user, not just CITIZEN.
+            mockMvc.perform(get("/api/incidents/my"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+        }
+    }
 
     // ---------------------------------------------------------------
     // GET /api/categories — authenticated, any role
@@ -296,6 +325,56 @@ class SecurityConfigTest {
         void adminUsers_asAdmin_isAccessible() throws Exception {
             mockMvc.perform(get("/api/admin/users"))
                     .andExpect(status().isNotFound()); // no controller loaded, but passes auth
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // GET /api/incidents/{id}/comments — authenticated, any role
+    // ---------------------------------------------------------------
+    @Nested
+    class IncidentCommentsReadAccess {
+
+        @Test
+        void getComments_withoutAuth_returns401() throws Exception {
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void getIncidentById_stillPublic_whileCommentsRequireAuth() throws Exception {
+            mockMvc.perform(get("/api/incidents/1"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @WithMockUser(roles = "CITIZEN")
+        void getComments_asCitizen_isNotUnauthorized() throws Exception {
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+        }
+
+        @Test
+        @WithMockUser(roles = "COMPANY")
+        void getComments_asCompany_isNotUnauthorized() throws Exception {
+            // No role restriction — any authenticated user, not just CITIZEN.
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void getComments_asManager_isNotUnauthorized() throws Exception {
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        void getComments_asAdmin_isNotUnauthorized() throws Exception {
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
         }
     }
 

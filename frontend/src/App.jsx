@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import AdminRoute from './components/AdminRoute.jsx';
+import ManagerOrAdminRoute from './components/ManagerOrAdminRoute.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 import Login from './pages/auth/Login.jsx';
 import Dashboard from './pages/dashboard/Dashboard.jsx';
@@ -14,11 +15,14 @@ import ResetPassword from './pages/auth/ResetPassword.jsx';
 import './App.css';
 import Assignment from "./pages/assignment/Assignment.jsx";
 import AuditLogs from './pages/admin/AuditLogs.jsx';
+import Home from './pages/home/Home.jsx';
+
 
 function App() {
     return (
         <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
@@ -38,9 +42,9 @@ function App() {
                     <Route path="incidents/:id" element={<IncidentDetail />} />
                     <Route path="report" element={<ReportIssue />} />
                     <Route path="assignment" element={
-                        ['MANAGER', 'ADMIN'].includes(
-                            JSON.parse(localStorage.getItem('user') || 'null')?.role
-                        ) ? <Assignment /> : <NotFound />
+                        <ManagerOrAdminRoute>
+                            <Assignment />
+                        </ManagerOrAdminRoute>
                     } />
                     <Route path="admin/logs" element={
                         <AdminRoute>
