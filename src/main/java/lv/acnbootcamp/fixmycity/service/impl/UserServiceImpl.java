@@ -62,8 +62,11 @@ public class UserServiceImpl implements UserService {
             throw new EmailAlreadyExistsException(email);
         }
 
-        if (role == Role.COMPANY && company != null &&
-                companyRepository.existsByCompanyNameIgnoreCase(company.getCompanyName())) {
+        if (role == Role.COMPANY && company == null) {
+            throw new IllegalArgumentException("Company details are required for role COMPANY.");
+        }
+
+        if (role == Role.COMPANY && companyRepository.existsByCompanyNameIgnoreCase(company.getCompanyName())) {
             throw new CompanyAlreadyExistsException(
                     "Company '" + company.getCompanyName() + "' already exists.");
         }
@@ -77,9 +80,8 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User saved = userRepository.save(user);
-        if (role == Role.COMPANY && company != null) {
 
-
+        if (role == Role.COMPANY) {
             Category category = categoryRepository
                     .findByCategoryIdAndIsDeletedFalse(company.getCategoryId())
                     .orElseThrow(() -> new CategoryNotFoundException(
