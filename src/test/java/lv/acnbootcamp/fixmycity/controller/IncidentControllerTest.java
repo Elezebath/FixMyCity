@@ -28,6 +28,8 @@ import lv.acnbootcamp.fixmycity.dto.incident.ResolveIncidentRequest;
 import lv.acnbootcamp.fixmycity.security.JwtAuthenticationFilter;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -1083,32 +1085,14 @@ class IncidentControllerTest {
             verifyNoInteractions(incidentService);
         }
 
-        @Test
-        @WithMockUser(roles = "CITIZEN")
-        void returns200WhenRoleIsCitizen() throws Exception {
+        @ParameterizedTest
+        @ValueSource(strings = {"CITIZEN", "MANAGER", "ADMIN", "COMPANY"})
+        void returns200WhenRoleIsAuthorized(String role) throws Exception {
             when(incidentService.getComments(10L))
                     .thenReturn(List.of(createSampleComment()));
 
-            mockMvc.perform(get("/api/incidents/10/comments"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.length()").value(1))
-                    .andExpect(jsonPath("$[0].commentId").value(1))
-                    .andExpect(jsonPath("$[0].incidentId").value(10))
-                    .andExpect(jsonPath("$[0].comment").value("Replaced the light fixture."))
-                    .andExpect(jsonPath("$[0].authorName").value("Jane Smith"))
-                    .andExpect(jsonPath("$[0].authorRole").value("COMPANY"));
-
-            verify(incidentService).getComments(10L);
-        }
-
-        @Test
-        @WithMockUser(roles = "MANAGER")
-        void returns200WhenRoleIsManager() throws Exception {
-            when(incidentService.getComments(10L))
-                    .thenReturn(List.of(createSampleComment()));
-
-            mockMvc.perform(get("/api/incidents/10/comments"))
+            mockMvc.perform(get("/api/incidents/10/comments")
+                            .with(user("testuser").roles(role)))
                     .andExpect(status().isOk())
                     .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.length()").value(1))
@@ -1149,32 +1133,6 @@ class IncidentControllerTest {
                     .andExpect(jsonPath("$[1].incidentId").value(10))
                     .andExpect(jsonPath("$[1].comment").value("Second comment"))
                     .andExpect(jsonPath("$[1].authorRole").value("MANAGER"));
-
-            verify(incidentService).getComments(10L);
-        }
-
-        @Test
-        @WithMockUser(roles = "ADMIN")
-        void returns200WhenRoleIsAdmin() throws Exception {
-            when(incidentService.getComments(10L))
-                    .thenReturn(List.of(createSampleComment()));
-
-            mockMvc.perform(get("/api/incidents/10/comments"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").value(1));
-
-            verify(incidentService).getComments(10L);
-        }
-
-        @Test
-        @WithMockUser(roles = "COMPANY")
-        void returns200WhenRoleIsCompany() throws Exception {
-            when(incidentService.getComments(10L))
-                    .thenReturn(List.of(createSampleComment()));
-
-            mockMvc.perform(get("/api/incidents/10/comments"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").value(1));
 
             verify(incidentService).getComments(10L);
         }

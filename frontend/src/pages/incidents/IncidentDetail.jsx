@@ -64,6 +64,10 @@ function IncidentDetail() {
     const [resolveError, setResolveError] = useState('');
     const [resolving, setResolving] = useState(false);
 
+    const [assignOpen, setAssignOpen] = useState(false);
+    const [assignError, setAssignError] = useState('');
+    const [assigning, setAssigning] = useState(false);
+
     const loadComments = useCallback(async (numericId) => {
         setCommentsLoading(true);
         setCommentsError('');
@@ -71,7 +75,6 @@ function IncidentDetail() {
             const data = await getIncidentComments(numericId);
             setComments(Array.isArray(data) ? data : []);
         } catch (err) {
-            // 403/401: hide section quietly; other errors surface a message
             if (err.status === 403 || err.status === 401) {
                 setComments([]);
                 setCommentsError('');
@@ -81,7 +84,7 @@ function IncidentDetail() {
         } finally {
             setCommentsLoading(false);
         }
-    });
+    }, []);
 
     const load = useCallback(async () => {
         const numericId = Number(id);
