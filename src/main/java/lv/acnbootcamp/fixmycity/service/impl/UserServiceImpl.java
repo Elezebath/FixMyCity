@@ -157,6 +157,11 @@ public class UserServiceImpl implements UserService {
                 .role(user.getRole())
                 .enabled(user.isEnabled())
                 .createdAt(user.getCreatedAt())
+                .companyId(
+                        user.getCompany() != null
+                                ? user.getCompany().getCompanyId()
+                                : null
+                )
                 .build();
     }
 }

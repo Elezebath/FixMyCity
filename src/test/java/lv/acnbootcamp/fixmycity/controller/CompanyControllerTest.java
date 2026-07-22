@@ -1,7 +1,6 @@
 package lv.acnbootcamp.fixmycity.controller;
 
 import lv.acnbootcamp.fixmycity.config.SecurityConfig;
-import lv.acnbootcamp.fixmycity.entity.Company;
 import lv.acnbootcamp.fixmycity.service.CompanyService;
 import lv.acnbootcamp.fixmycity.dto.company.CompanyResponse;
 import lv.acnbootcamp.fixmycity.security.JwtService;
@@ -44,7 +43,11 @@ class CompanyControllerTest {
         return CompanyResponse.builder()
                 .companyId(1L)
                 .companyName("FixIt Co.")
+                .registrationNo("12345")
+                .categoryId(1L)
                 .contactEmail("contact@fixit.lv")
+                .contactPhone("12345678")
+                .address("Riga")
                 .active(true)
                 .build();
     }
@@ -54,6 +57,10 @@ class CompanyControllerTest {
                 .companyId(2L)
                 .companyName("RoadWorks Ltd.")
                 .contactEmail("info@roadworks.lv")
+                .registrationNo("67890")
+                .categoryId(2L)
+                .contactPhone(null)
+                .address(null)
                 .active(true)
                 .build();
     }
@@ -137,7 +144,11 @@ class CompanyControllerTest {
                     .andExpect(jsonPath("$[0].companyId").value(1))
                     .andExpect(jsonPath("$[0].companyName").value("FixIt Co."))
                     .andExpect(jsonPath("$[0].contactEmail").value("contact@fixit.lv"))
-                    .andExpect(jsonPath("$[0].active").value(true));
+                    .andExpect(jsonPath("$[0].active").value(true))
+                    .andExpect(jsonPath("$[0].registrationNo").value("12345"))
+                    .andExpect(jsonPath("$[0].categoryId").value(1))
+                    .andExpect(jsonPath("$[0].contactPhone").value("12345678"))
+                    .andExpect(jsonPath("$[0].address").value("Riga"));
         }
 
         @Test
@@ -157,18 +168,18 @@ class CompanyControllerTest {
 
         @Test
         @WithMockUser(roles = "MANAGER")
-        void findAll_doesNotExposeInternalFields() throws Exception {
-            // Company entity has registrationNo, contactPhone, address, category, user —
-            // none of these belong in CompanyResponse. This guards against accidental
-            // leakage if the mapping in the controller is ever changed carelessly.
+        void findAll_exposesOnlyCompanyResponseFields() throws Exception {
+            // Ensure only CompanyResponse fields are exposed and internal entity
+            // relationships are not leaked.
             when(companyService.findAll()).thenReturn(List.of(fixItCo()));
 
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0]", aMapWithSize(4)))
-                    .andExpect(jsonPath("$[0].registrationNo").doesNotExist())
-                    .andExpect(jsonPath("$[0].contactPhone").doesNotExist())
-                    .andExpect(jsonPath("$[0].address").doesNotExist())
+                    .andExpect(jsonPath("$[0]", aMapWithSize(8)))
+                    .andExpect(jsonPath("$[0].registrationNo").value("12345"))
+                    .andExpect(jsonPath("$[0].categoryId").value(1))
+                    .andExpect(jsonPath("$[0].contactPhone").value("12345678"))
+                    .andExpect(jsonPath("$[0].address").value("Riga"))
                     .andExpect(jsonPath("$[0].category").doesNotExist())
                     .andExpect(jsonPath("$[0].user").doesNotExist());
         }
@@ -183,7 +194,9 @@ class CompanyControllerTest {
             mockMvc.perform(get("/api/companies"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].companyId").value(2))
-                    .andExpect(jsonPath("$[0].companyName").value("RoadWorks Ltd."));
+                    .andExpect(jsonPath("$[0].companyName").value("RoadWorks Ltd."))
+                    .andExpect(jsonPath("$[0].contactPhone").isEmpty())
+                    .andExpect(jsonPath("$[0].address").isEmpty());
         }
     }
 

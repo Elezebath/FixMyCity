@@ -21,6 +21,10 @@ public class CompanyController {
         return companyService.findAll();
     }
 
+    @GetMapping("/{companyId}")
+    public CompanyResponse findById(@PathVariable Long companyId) {
+        return companyService.findById(companyId);
+    }
     @PutMapping("/{companyId}")
     public CompanyResponse updateCompany(
             @PathVariable Long companyId,

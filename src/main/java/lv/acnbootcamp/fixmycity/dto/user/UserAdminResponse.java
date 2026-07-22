@@ -17,4 +17,6 @@ public class UserAdminResponse {
     private Role role;
     private boolean enabled;
     private LocalDateTime createdAt;
+
+    private Long companyId;
 }

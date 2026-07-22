@@ -68,11 +68,25 @@ public class CompanyServiceImpl implements CompanyService {
         return mapToResponse(saved);
     }
 
+    @Override
+    public CompanyResponse findById(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() ->
+                        new CompanyNotFoundException(
+                                "Company with id " + companyId + " not found."));
+
+        return mapToResponse(company);
+    }
+
     private CompanyResponse mapToResponse(Company company) {
         return CompanyResponse.builder()
                 .companyId(company.getCompanyId())
                 .companyName(company.getCompanyName())
+                .registrationNo(company.getRegistrationNo())
+                .categoryId(company.getCategory().getCategoryId())
                 .contactEmail(company.getContactEmail())
+                .contactPhone(company.getContactPhone())
+                .address(company.getAddress())
                 .active(company.getActive())
                 .build();
     }

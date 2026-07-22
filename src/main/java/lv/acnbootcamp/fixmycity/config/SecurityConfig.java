@@ -113,7 +113,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/incidents/**").permitAll()
                         // Citizen-accessible category list for the create-incident form
                         .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/companies").hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/companies/**").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/companies/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/assign").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/resolve").hasAnyRole("COMPANY", "MANAGER")

@@ -1,5 +1,7 @@
 import {useState, useEffect} from 'react';
 import './AdminUsers.css';
+import { getCategories } from '../../services/categoryService';
+import { getCompany, updateCompany } from '../../services/companyService';
 
 const ROLES = ['CITIZEN', 'MANAGER', 'COMPANY', 'ADMIN'];
 
@@ -166,19 +168,75 @@ function AdminUsers() {
 }
 
 function CreateUserModal({onClose, onCreated, authHeader}) {
-    const [form, setForm] = useState({fullName: '', email: '', password: '', role: 'CITIZEN'});
+    const [form, setForm] = useState({
+        fullName: '',
+        email: '',
+        password: '',
+        role: 'CITIZEN',
+        company: {
+            companyName: '',
+            registrationNo: '',
+            categoryId: '',
+            contactEmail: '',
+            contactPhone: '',
+            address: ''
+        }
+    });
     const [error, setError] = useState('');
 
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        if (form.role !== 'COMPANY') {
+            return;
+        }
+
+        const loadCategories = async () => {
+            try {
+                const data = await getCategories();
+                setCategories(data);
+            } catch (err) {
+                setError(err.message);
+            }
+        };
+
+        void loadCategories();
+    }, [form.role]);
+
     const handleChange = (e) => setForm({...form, [e.target.name]: e.target.value});
+
+    const handleCompanyChange = (e) => {
+        setForm({
+            ...form,
+            company: {
+                ...form.company,
+                [e.target.name]: e.target.value
+            }
+        });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         try {
+            const payload = {
+                ...form,
+                company:
+                    form.role === 'COMPANY'
+                        ? {
+                            ...form.company,
+                            categoryId: Number(form.company.categoryId)
+                        }
+                        : null
+            };
+
             const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/admin/users`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json', ...authHeader},
-                body: JSON.stringify(form),
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...authHeader
+                },
+                body: JSON.stringify(payload),
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => null);
@@ -209,6 +267,74 @@ function CreateUserModal({onClose, onCreated, authHeader}) {
                             {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                         </select>
                     </label>
+                    {form.role === 'COMPANY' && (
+                        <>
+                            <label>Company name
+                                <input
+                                    name="companyName"
+                                    value={form.company.companyName}
+                                    onChange={handleCompanyChange}
+                                    required
+                                />
+                            </label>
+
+                            <label>Registration number
+                                <input
+                                    name="registrationNo"
+                                    value={form.company.registrationNo}
+                                    onChange={handleCompanyChange}
+                                    required
+                                />
+                            </label>
+
+                            <label>
+                                Category
+                                <select
+                                    name="categoryId"
+                                    value={form.company.categoryId}
+                                    onChange={handleCompanyChange}
+                                    required
+                                >
+                                    <option value="">Select category</option>
+
+                                    {categories.map(category => (
+                                        <option
+                                            key={category.categoryId}
+                                            value={category.categoryId}
+                                        >
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            <label>Contact email
+                                <input
+                                    type="email"
+                                    name="contactEmail"
+                                    value={form.company.contactEmail}
+                                    onChange={handleCompanyChange}
+                                    required
+                                />
+                            </label>
+
+                            <label>Contact phone
+                                <input
+                                    name="contactPhone"
+                                    value={form.company.contactPhone}
+                                    onChange={handleCompanyChange}
+                                />
+                            </label>
+
+                            <label>Address
+                                <input
+                                    name="address"
+                                    value={form.company.address}
+                                    onChange={handleCompanyChange}
+                                />
+                            </label>
+                        </>
+                    )}
                     {error && <p className="admin-error">{error}</p>}
                     <div className="admin-modal-actions">
                         <button type="button" onClick={onClose}>Cancel</button>
@@ -221,7 +347,59 @@ function CreateUserModal({onClose, onCreated, authHeader}) {
 }
 
 function EditUserModal({user, onClose, onSaved, authHeader}) {
-    const [form, setForm] = useState({fullName: user.fullName, email: user.email});
+    const [form, setForm] = useState({
+        fullName: user.fullName,
+        email: user.email,
+        company: {
+            companyName: '',
+            registrationNo: '',
+            categoryId: '',
+            contactEmail: '',
+            contactPhone: '',
+            address: ''
+        }
+    });
+
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const categoryData = await getCategories();
+                setCategories(categoryData);
+
+                if (user.role === 'COMPANY' && user.companyId) {
+                    const company = await getCompany(user.companyId);
+
+                    setForm(prev => ({
+                        ...prev,
+                        company: {
+                            companyName: company.companyName,
+                            registrationNo: company.registrationNo,
+                            categoryId: company.categoryId,
+                            contactEmail: company.contactEmail,
+                            contactPhone: company.contactPhone ?? '',
+                            address: company.address ?? ''
+                        }
+                    }));
+                }
+            } catch (err) {
+                setError(err.message);
+            }
+        };
+
+        void loadData();
+    }, [user]);
+
+    const handleCompanyChange = (e) => {
+        setForm({
+            ...form,
+            company: {
+                ...form.company,
+                [e.target.name]: e.target.value
+            }
+        });
+    };
     const [error, setError] = useState('');
 
     const handleChange = (e) => setForm({...form, [e.target.name]: e.target.value});
@@ -239,6 +417,17 @@ function EditUserModal({user, onClose, onSaved, authHeader}) {
                 const err = await res.json().catch(() => null);
                 throw new Error(err?.message || 'Failed to update profile');
             }
+
+            if (user.role === 'COMPANY' && user.companyId) {
+                await updateCompany(user.companyId, {
+                    companyName: form.company.companyName,
+                    registrationNo: form.company.registrationNo,
+                    categoryId: Number(form.company.categoryId),
+                    contactEmail: form.company.contactEmail,
+                    contactPhone: form.company.contactPhone,
+                    address: form.company.address
+                });
+            }
             onSaved();
         } catch (err) {
             setError(err.message);
@@ -254,8 +443,89 @@ function EditUserModal({user, onClose, onSaved, authHeader}) {
                         <input name="fullName" value={form.fullName} onChange={handleChange} required/>
                     </label>
                     <label>Email
-                        <input type="email" name="email" value={form.email} onChange={handleChange} required/>
+                        <input
+                            type="email"
+                            name="email"
+                            value={form.email}
+                            onChange={handleChange}
+                            required
+                        />
                     </label>
+
+                    {user.role === 'COMPANY' && (
+                        <>
+                            <label>
+                                Company name
+                                <input
+                                    name="companyName"
+                                    value={form.company.companyName}
+                                    onChange={handleCompanyChange}
+                                    required
+                                />
+                            </label>
+
+                            <label>
+                                Registration number
+                                <input
+                                    name="registrationNo"
+                                    value={form.company.registrationNo}
+                                    onChange={handleCompanyChange}
+                                    required
+                                />
+                            </label>
+
+                            <label>
+                                Category
+                                <select
+                                    name="categoryId"
+                                    value={form.company.categoryId}
+                                    onChange={handleCompanyChange}
+                                    required
+                                >
+                                    <option value="">Select category</option>
+
+                                    {categories.map(category => (
+                                        <option
+                                            key={category.categoryId}
+                                            value={category.categoryId}
+                                        >
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            <label>
+                                Contact email
+                                <input
+                                    type="email"
+                                    name="contactEmail"
+                                    value={form.company.contactEmail}
+                                    onChange={handleCompanyChange}
+                                    required
+                                />
+                            </label>
+
+                            <label>
+                                Contact phone
+                                <input
+                                    name="contactPhone"
+                                    value={form.company.contactPhone}
+                                    onChange={handleCompanyChange}
+                                />
+                            </label>
+
+                            <label>
+                                Address
+                                <input
+                                    name="address"
+                                    value={form.company.address}
+                                    onChange={handleCompanyChange}
+                                />
+                            </label>
+                        </>
+                    )}
+
                     {error && <p className="admin-error">{error}</p>}
                     <div className="admin-modal-actions">
                         <button type="button" onClick={onClose}>Cancel</button>

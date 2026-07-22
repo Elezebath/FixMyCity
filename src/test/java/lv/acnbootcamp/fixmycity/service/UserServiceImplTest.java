@@ -132,6 +132,32 @@ class UserServiceImplTest {
 
             verify(userRepository, never()).save(any());
         }
+
+        @Test
+        void returnsNullCompanyIdWhenUserHasNoCompany(){
+            existingUser.setCompany(null);
+
+            when(userRepository.findById(1L))
+                    .thenReturn(Optional.of(existingUser));
+            UserAdminResponse response = userService.getUserById(1L);
+
+            assertThat(response.getCompanyId()).isNull();
+        }
+
+        @Test
+        void returnsCompanyIdWhenUserHasCompany(){
+            Company company = Company.builder()
+                    .companyId(5L)
+                    .build();
+
+            existingUser.setCompany(company);
+
+            when(userRepository.findById(1L))
+                    .thenReturn(Optional.of(existingUser));
+            UserAdminResponse response = userService.getUserById(1L);
+
+            assertThat(response.getCompanyId()).isEqualTo(5L);
+        }
     }
 
     @Nested
