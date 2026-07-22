@@ -318,8 +318,12 @@ function IncidentDetail() {
 
                                         <div>
                                             <p className="incident-detail__activity-text">
-                                                <strong>{formatStatus(item.oldStatus)}</strong>
-                                                {' → '}
+                                                {item.oldStatus && (
+                                                    <>
+                                                        <strong>{formatStatus(item.oldStatus)}</strong>
+                                                        {' → '}
+                                                    </>
+                                                )}
                                                 <strong>{formatStatus(item.newStatus)}</strong>
                                             </p>
 

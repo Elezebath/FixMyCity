@@ -17,6 +17,7 @@ import lv.acnbootcamp.fixmycity.service.impl.IncidentServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -64,6 +65,8 @@ class IncidentServiceImplTest {
     private Category category;
     private Company company;
     private User companyUser;
+    ArgumentCaptor<IncidentStatusHistory> historyCaptor =
+            ArgumentCaptor.forClass(IncidentStatusHistory.class);
 
 
     @BeforeEach
@@ -270,8 +273,16 @@ class IncidentServiceImplTest {
 
         IncidentResponse result = incidentService.create(request, citizenId);
         assertThat(result).isEqualTo(response);
-        verify(incidentRepository)
-                .save(any(Incident.class));
+
+        verify(incidentRepository).save(any(Incident.class));
+        verify(incidentStatusHistoryRepository).save(historyCaptor.capture());
+        IncidentStatusHistory history = historyCaptor.getValue();
+        assertThat(history.getIncident()).isEqualTo(incident);
+        assertThat(history.getOldStatus()).isNull();
+        assertThat(history.getNewStatus()).isEqualTo(IncidentStatus.NEW);
+        assertThat(history.getChangedBy()).isEqualTo(citizen);
+        assertThat(history.getRemarks())
+                .isEqualTo("New incident has been created");
 
     }
 

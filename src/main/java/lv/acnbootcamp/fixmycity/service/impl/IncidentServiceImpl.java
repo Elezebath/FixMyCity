@@ -221,6 +221,9 @@ public class IncidentServiceImpl implements IncidentService {
             }
         }
 
+        recordStatusChange(savedIncident, null, IncidentStatus.NEW, citizenId,
+                "New incident has been created");
+
         return incidentMapper.toResponse(savedIncident);
     }
 
@@ -318,7 +321,7 @@ public class IncidentServiceImpl implements IncidentService {
         commentRepository.save(comment);
 
         recordStatusChange(savedIncident, oldStatus, IncidentStatus.RESOLVED, resolvedBy.getId(),
-                request.getComment());
+                "Incident has been resolved");
 
         log.info("Incident {} resolved by {}", incidentId, resolvedByEmail);
 
