@@ -218,10 +218,29 @@
     font-size: inherit;
 }
 
+.login-form input:disabled {
+    background: #f8fafc;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.login-submit:disabled {
+    background: #93c5fd;
+    cursor: not-allowed;
+}
+
+.login-submit:disabled:hover {
+    background: #93c5fd;
+}
+
 .login-error {
     color: #dc2626;
     font-size: 13px;
     margin: 0;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    padding: 8px 12px;
+    border-radius: 8px;
 }
 
 .forgot-password-link {
