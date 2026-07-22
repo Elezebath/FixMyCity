@@ -10,6 +10,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import io.jsonwebtoken.JwtException;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
@@ -17,6 +18,7 @@ import java.io.IOException;
  * Reads JWT access tokens from incoming requests and authenticates
  * users in Spring Security when the token is valid.
  */
+@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -37,18 +39,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
-        String authorizationHeader =
-                request.getHeader(AUTHORIZATION_HEADER);
+        String requestUri = request.getRequestURI();
+        String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
+
+        log.debug("Processing request: {} {}", request.getMethod(), requestUri);
+        log.debug("Authorization header present: {}", authorizationHeader != null);
 
         if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+            log.debug("No valid JWT token found in request");
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = authorizationHeader.substring(BEARER_PREFIX.length());
+        log.debug("JWT token extracted, length: {}", token.length());
 
         try {
             String email = jwtService.extractUsername(token);
+            log.debug("Extracted email from token: {}", email);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
@@ -57,6 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 .loadUserByUsername(email);
 
                 if (jwtService.isTokenValid(token, userDetails)) {
+                    log.debug("Token is valid for user: {}", email);
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
@@ -69,10 +78,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext()
                             .setAuthentication(authentication);
+                    log.debug("User {} authenticated successfully with roles: {}", 
+                            email, 
+                            userDetails.getAuthorities());
+                } else {
+                    log.warn("Token validation failed for user: {}", email);
                 }
             }
         } catch (JwtException | IllegalArgumentException exception) {
             // Invalid, expired, or malformed tokens must not authenticate the request.
+            log.error("JWT authentication failed: {}", exception.getMessage());
             SecurityContextHolder.clearContext();
         }
 

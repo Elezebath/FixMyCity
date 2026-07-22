@@ -1,0 +1,136 @@
+.report-page {
+    max-width: 720px;
+}
+
+.report-page__header {
+    margin-bottom: 20px;
+}
+
+.report-page__header h1 {
+    font-size: 24px;
+    color: #0f172a;
+    margin: 0 0 4px;
+}
+
+.report-page__subtitle {
+    color: #64748b;
+    font-size: 14px;
+    margin: 0;
+}
+
+.report-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.report-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.report-field input,
+.report-field select,
+.report-field textarea {
+    font-weight: 400;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #334155;
+}
+
+.report-field input:focus,
+.report-field select:focus,
+.report-field textarea:focus {
+    outline: 2px solid #2563eb;
+    outline-offset: 1px;
+    border-color: #2563eb;
+}
+
+.report-field textarea {
+    resize: vertical;
+}
+
+.report-field__hint {
+    font-weight: 400;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.report-upload {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.report-upload:hover {
+    border-color: #2563eb;
+    background: #f8fafc;
+}
+
+.report-error {
+    color: #dc2626;
+    font-size: 13px;
+    margin: 0;
+}
+
+.report-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.report-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.report-btn--ghost {
+    background: #fff;
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+.report-btn--ghost:hover {
+    background: #f8fafc;
+}
+
+.report-btn--primary {
+    background: #2563eb;
+    color: #fff;
+}
+
+.report-btn--primary:hover {
+    background: #1d4ed8;
+}
+
+.report-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.report-btn--primary:disabled:hover {
+    background: #2563eb;
+}
+

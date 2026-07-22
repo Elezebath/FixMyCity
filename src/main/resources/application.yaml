@@ -1,6 +1,15 @@
+app:
+  upload:
+    path: ${APP_UPLOAD_PATH:uploads/incidents}
 spring:
   application:
     name: fixmycity
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+      file-size-threshold: 2KB
 
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:fixmycity}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
@@ -17,6 +26,21 @@ spring:
         format_sql: true
     database-platform: org.hibernate.dialect.MySQLDialect
 
+  mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: smtp.gmail.com
+
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -24,7 +48,7 @@ springdoc:
     path: /swagger-ui.html
 
 server:
-  port: ${SERVER_PORT:3100} # To be changed
+  port: ${SERVER_PORT:3100}
 
 logging:
   level:
@@ -33,3 +57,10 @@ logging:
 jwt:
   secret: ${JWT_SECRET}
   expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+
+password-reset:
+  expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:30}
+  frontend-url: ${FRONTEND_RESET_PASSWORD_URL:http://localhost:3150/reset-password}
+
+email:
+  from: ${SMTP_FROM}

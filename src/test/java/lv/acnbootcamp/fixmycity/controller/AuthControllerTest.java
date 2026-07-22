@@ -1,21 +1,21 @@
 package lv.acnbootcamp.fixmycity.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lv.acnbootcamp.fixmycity.security.JwtService;
 import lv.acnbootcamp.fixmycity.config.SecurityConfig;
-import lv.acnbootcamp.fixmycity.dto.UserResponse;
-import lv.acnbootcamp.fixmycity.entity.Role;
-import lv.acnbootcamp.fixmycity.exception.EmailAlreadyExistsException;
+import lv.acnbootcamp.fixmycity.dto.user.UserResponse;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
+import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.security.UserDetailsServiceImpl;
 import lv.acnbootcamp.fixmycity.service.AuthService;
+import lv.acnbootcamp.fixmycity.service.PasswordRecoveryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import lv.acnbootcamp.fixmycity.dto.LoginRequest;
-import lv.acnbootcamp.fixmycity.dto.LoginResponse;
+import lv.acnbootcamp.fixmycity.dto.auth.LoginRequest;
+import lv.acnbootcamp.fixmycity.dto.auth.LoginResponse;
 import org.springframework.http.MediaType;
 
 import static org.mockito.Mockito.verify;
@@ -36,6 +36,9 @@ class AuthControllerTest {
     private AuthService authService;
 
     @MockitoBean
+    private PasswordRecoveryService passwordRecoveryService;
+
+    @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
     // Provides JwtService to the test application context
     // because JwtAuthenticationFilter depends on it
@@ -44,6 +47,7 @@ class AuthControllerTest {
 
     @Test
     void register_returns201_whenRequestIsValid() throws Exception {
+        // Role is server-assigned (always CITIZEN on self-registration), not client-selectable.
         var response = new UserResponse(1L, "new@example.com", "New User", Role.CITIZEN);
         when(authService.register(any())).thenReturn(response);
 
@@ -51,8 +55,7 @@ class AuthControllerTest {
                 {
                   "email": "new@example.com",
                   "password": "password123",
-                  "fullName": "New User",
-                  "role": "CITIZEN"
+                  "fullName": "New User"
                 }
                 """;
 
@@ -71,8 +74,7 @@ class AuthControllerTest {
                 {
                   "email": "",
                   "password": "password123",
-                  "fullName": "New User",
-                  "role": "CITIZEN"
+                  "fullName": "New User"
                 }
                 """;
 
@@ -91,8 +93,7 @@ class AuthControllerTest {
                 {
                   "email": "dup@example.com",
                   "password": "password123",
-                  "fullName": "Dup User",
-                  "role": "CITIZEN"
+                  "fullName": "Dup User"
                 }
                 """;
 

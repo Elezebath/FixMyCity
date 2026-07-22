@@ -1,6 +1,6 @@
 package lv.acnbootcamp.fixmycity.security;
 
-import lv.acnbootcamp.fixmycity.entity.User;
+import lv.acnbootcamp.fixmycity.entity.user.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

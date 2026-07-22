@@ -2,7 +2,7 @@ name: Deploy to Self-Hosted Runner
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, test ]
   workflow_dispatch:
     inputs:
       server_port:
@@ -64,8 +64,39 @@ jobs:
           echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
           echo "server_port=$PORT_INPUT" >> $GITHUB_OUTPUT
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+            node-version: '20'
+            cache: 'npm'
+            cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ""
+        run: |
+          npm ci
+          npm run build
+
+      - name: Copy frontend build into Spring static resources
+        run: |
+          rm -rf src/main/resources/static
+          mkdir -p src/main/resources/static
+          cp -r frontend/dist/* src/main/resources/static/
+
+      - name: Verify copied frontend
+        run: |
+          echo "===== STATIC DIRECTORY ====="
+          ls -R src/main/resources/static
+
       - name: Build with Maven
         run: mvn clean package -DskipTests
+
+      - name: Verify packaged frontend
+        run: |
+          echo "===== JAR CONTENTS ====="
+          jar tf target/*.jar | grep BOOT-INF/classes/static || true
 
       - name: Check Docker availability
         run: docker compose version
@@ -78,6 +109,15 @@ jobs:
           DB_NAME=fixmycity
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
           SERVER_PORT=${SERVER_PORT}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION_MS=3600000
+          SMTP_HOST=smtp.gmail.com
+          SMTP_PORT=587
+          SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM=${{ secrets.SMTP_FROM }}
+          FRONTEND_RESET_PASSWORD_URL=https://team1.acnbootcamp.lv/forgot-password
+          PASSWORD_RESET_EXPIRATION_MINUTES=30
           EOF
 
       - name: Stop existing stack (if running)
@@ -88,7 +128,14 @@ jobs:
         run: docker compose config > docker-compose.resolved.yml
 
       - name: Build and start stack
-        run: docker compose -f docker-compose.resolved.yml up -d --build
+        run: docker compose -f docker-compose.resolved.yml up -d --build app mysql
+
+#      ---------------------- THIS SHOULD BE REMOVED AFTER !! -------------------------------------------------
+
+      - name: Fix role column type (VARCHAR instead of native ENUM)
+        run: |
+            docker exec fixmycity-mysql-1 mysql -u root -p"${{ secrets.DB_PASSWORD }}" \
+              -e "ALTER TABLE users MODIFY COLUMN role VARCHAR(255) NOT NULL;" fixmycity
 
       - name: Verify deployment
         env:

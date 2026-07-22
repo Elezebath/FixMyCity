@@ -30,10 +30,38 @@ services:
       DB_USERNAME: root
       DB_PASSWORD: ${DB_PASSWORD:-root}
       SERVER_PORT: ${SERVER_PORT:-3100}
+
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      FRONTEND_RESET_PASSWORD_URL: ${FRONTEND_RESET_PASSWORD_URL:-http://localhost:3150/reset-password}
+      PASSWORD_RESET_EXPIRATION_MINUTES: ${PASSWORD_RESET_EXPIRATION_MINUTES:-30}
+
+      APP_UPLOAD_PATH: ${APP_UPLOAD_PATH:-/app/uploads}
+      HOST_UPLOAD_PATH: ${HOST_UPLOAD_PATH:-/app/uploads}
+
+    volumes:
+      - "${HOST_UPLOAD_PATH:-./uploads}:${APP_UPLOAD_PATH:-/app/uploads}"
+
     ports:
       - "${SERVER_PORT:-3100}:${SERVER_PORT:-3100}"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3100}
+    container_name: fixmycity-frontend
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "3150:80"
 
   adminer:
     image: adminer
