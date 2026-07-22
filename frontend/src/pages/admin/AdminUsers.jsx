@@ -2,6 +2,7 @@ import {useState, useEffect} from 'react';
 import './AdminUsers.css';
 import { getCategories } from '../../services/categoryService';
 import { getCompany, updateCompany } from '../../services/companyService';
+import { formatDate } from '../../utils/incidentHelpers.js';
 
 const ROLES = ['CITIZEN', 'MANAGER', 'COMPANY', 'ADMIN'];
 
@@ -123,7 +124,7 @@ function AdminUsers() {
                                     {u.enabled ? 'Enabled' : 'Disabled'}
                                 </span>
                             </td>
-                            <td>{new Date(u.createdAt).toLocaleDateString()}</td>
+                            <td>{formatDate(u.createdAt)}</td>
                             <td className="admin-actions">
                                 <button
                                     className={u.enabled ? 'action-btn action-btn--danger' : 'action-btn action-btn--success'}

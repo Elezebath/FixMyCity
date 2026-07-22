@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { getMyIncidents } from '../../services/incidentService';
 import { normalizeIncident, formatStatus, formatRelative, STATUS_CLASS } from '../../utils/incidentHelpers';
 import './Dashboard.css';
-
 function StatusBadge({ status }) {
     return <span className={STATUS_CLASS[status] || 'badge'}>{formatStatus(status)}</span>;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatDateTime } from '../../utils/incidentHelpers.js';
 import './AuditLogs.css';
 
 const ENTITY_TYPES = ['CATEGORY', 'USER'];
@@ -122,13 +123,7 @@ function AuditLogs() {
                     {logs.map((log) => (
                         <tr key={log.auditLogId}>
                             <td className="audit-logs-table__timestamp">
-                                {new Date(log.timestamp).toLocaleString(undefined, {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
+                                {formatDateTime(log.timestamp)}
                             </td>
                             <td className="audit-logs-table__entity">{log.entityType}</td>
                             <td className="audit-logs-table__id">{log.entityId}</td>

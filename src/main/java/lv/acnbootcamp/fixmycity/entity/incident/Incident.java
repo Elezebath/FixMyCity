@@ -72,9 +72,5 @@ public class Incident extends BaseEntity {
 
     @OneToMany(mappedBy = "incident")
     @Builder.Default
-    private List<IncidentAssignment> assignments = new ArrayList<>();
-
-    @OneToMany(mappedBy = "incident")
-    @Builder.Default
     private List<IncidentStatusHistory> statusHistory = new ArrayList<>();
 }
