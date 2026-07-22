@@ -384,6 +384,28 @@ public class IncidentServiceImpl implements IncidentService {
                 .toList();
     }
 
+    /**
+     * Get all comments for an incident, ordered by creation time ascending.
+     * Access is restricted at the security layer to ADMIN, MANAGER, and COMPANY roles.
+     */
+    @Override
+    public List<CommentResponse> getComments(Long incidentId) {
+        validateId(incidentId);
+
+        incidentRepository.findByIncidentIdAndSoftDeletedFalse(incidentId)
+                .orElseThrow(() -> new IncidentNotFoundException(
+                        "Incident not found with id: " + incidentId));
+
+        log.info("Fetching comments for incident {}", incidentId);
+
+        return commentRepository
+                .findAllByIncident_IncidentIdOrderByCreatedAtAsc(incidentId)
+                .stream()
+                .map(incidentMapper::toCommentResponse)
+                .toList();
+    }
+
+
     private void recordStatusChange(Incident incident, IncidentStatus oldStatus, IncidentStatus newStatus,
                                     Long changedById, String remarks) {
         if (oldStatus == newStatus) {

@@ -2,8 +2,10 @@ package lv.acnbootcamp.fixmycity.controller;
 
 import lv.acnbootcamp.fixmycity.config.SecurityConfig;
 import lv.acnbootcamp.fixmycity.dto.incident.AttachmentResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.CommentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
+
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatus;
 import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
@@ -1058,4 +1060,188 @@ class IncidentControllerTest {
                     .andExpect(status().isBadRequest());
         }
     }
+
+    @Nested
+    @DisplayName("GET /api/incidents/{id}/comments - Get Comments Tests")
+    class GetCommentsEndpoint {
+
+        private CommentResponse createSampleComment() {
+            return CommentResponse.builder()
+                    .commentId(1L)
+                    .incidentId(10L)
+                    .comment("Replaced the light fixture.")
+                    .authorName("Jane Smith")
+                    .authorRole("COMPANY")
+                    .build();
+        }
+
+        @Test
+        void returns401WhenUnauthenticated() throws Exception {
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isUnauthorized());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @Test
+        @WithMockUser(roles = "CITIZEN")
+        void returns200WhenRoleIsCitizen() throws Exception {
+            when(incidentService.getComments(10L))
+                    .thenReturn(List.of(createSampleComment()));
+
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.length()").value(1))
+                    .andExpect(jsonPath("$[0].commentId").value(1))
+                    .andExpect(jsonPath("$[0].incidentId").value(10))
+                    .andExpect(jsonPath("$[0].comment").value("Replaced the light fixture."))
+                    .andExpect(jsonPath("$[0].authorName").value("Jane Smith"))
+                    .andExpect(jsonPath("$[0].authorRole").value("COMPANY"));
+
+            verify(incidentService).getComments(10L);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns200WhenRoleIsManager() throws Exception {
+            when(incidentService.getComments(10L))
+                    .thenReturn(List.of(createSampleComment()));
+
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.length()").value(1))
+                    .andExpect(jsonPath("$[0].commentId").value(1))
+                    .andExpect(jsonPath("$[0].incidentId").value(10))
+                    .andExpect(jsonPath("$[0].comment").value("Replaced the light fixture."))
+                    .andExpect(jsonPath("$[0].authorName").value("Jane Smith"))
+                    .andExpect(jsonPath("$[0].authorRole").value("COMPANY"));
+
+            verify(incidentService).getComments(10L);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returnsMultipleCommentsInCorrectOrder() throws Exception {
+            CommentResponse first = createSampleComment(); // commentId 1
+            CommentResponse second = CommentResponse.builder()
+                    .commentId(2L).incidentId(10L)
+                    .comment("Second comment")
+                    .authorName("John Doe")
+                    .authorRole("MANAGER")
+                    .build();// commentId 2
+
+            when(incidentService.getComments(10L))
+                    .thenReturn(List.of(first, second));
+
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.length()").value(2))
+                    .andExpect(jsonPath("$[0].commentId").value(1))
+                    .andExpect(jsonPath("$[0].incidentId").value(10))
+                    .andExpect(jsonPath("$[0].comment").value("Replaced the light fixture."))
+                    .andExpect(jsonPath("$[0].authorName").value("Jane Smith"))
+                    .andExpect(jsonPath("$[0].authorRole").value("COMPANY"))
+                    .andExpect(jsonPath("$[1].authorName").value("John Doe"))
+                    .andExpect(jsonPath("$[1].commentId").value(2))
+                    .andExpect(jsonPath("$[1].incidentId").value(10))
+                    .andExpect(jsonPath("$[1].comment").value("Second comment"))
+                    .andExpect(jsonPath("$[1].authorRole").value("MANAGER"));
+
+            verify(incidentService).getComments(10L);
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        void returns200WhenRoleIsAdmin() throws Exception {
+            when(incidentService.getComments(10L))
+                    .thenReturn(List.of(createSampleComment()));
+
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(1));
+
+            verify(incidentService).getComments(10L);
+        }
+
+        @Test
+        @WithMockUser(roles = "COMPANY")
+        void returns200WhenRoleIsCompany() throws Exception {
+            when(incidentService.getComments(10L))
+                    .thenReturn(List.of(createSampleComment()));
+
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(1));
+
+            verify(incidentService).getComments(10L);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returnsEmptyListWhenNoComments() throws Exception {
+            when(incidentService.getComments(10L))
+                    .thenReturn(List.of());
+
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(0));
+
+            verify(incidentService).getComments(10L);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns404WhenIncidentNotFound() throws Exception {
+            when(incidentService.getComments(999L))
+                    .thenThrow(new IncidentNotFoundException("Incident not found with id: 999"));
+
+            mockMvc.perform(get("/api/incidents/999/comments"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error").value("Incident not found with id: 999"));
+
+            verify(incidentService).getComments(999L);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns400WhenIdIsZero() throws Exception {
+            mockMvc.perform(get("/api/incidents/0/comments"))
+                    .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns400WhenIdIsNegative() throws Exception {
+            mockMvc.perform(get("/api/incidents/-1/comments"))
+                    .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns400WhenIdIsNotNumeric() throws Exception {
+            mockMvc.perform(get("/api/incidents/abc/comments"))
+                    .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(incidentService);
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void returns500WhenServiceThrowsUnexpectedError() throws Exception {
+            when(incidentService.getComments(10L))
+                    .thenThrow(new RuntimeException("Unexpected error"));
+
+            mockMvc.perform(get("/api/incidents/10/comments"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.error").value("An unexpected error occurred"));
+        }
+    }
 }
+

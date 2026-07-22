@@ -731,5 +731,92 @@ class IncidentServiceImplTest {
         verify(incidentMapper)
                 .toStatusHistoryResponse(history, true);
     }
+    }
+
+    @Nested
+    class GetComments {
+
+        @Test
+        void getComments_shouldReturnComments() {
+            Comment comment = Comment.builder()
+                    .commentId(1L)
+                    .incident(incident)
+                    .comment("Work completed")
+                    .build();
+
+            CommentResponse commentResponse = CommentResponse.builder()
+                    .commentId(1L)
+                    .incidentId(1L)
+                    .comment("Work completed")
+                    .authorName("Jane Smith")
+                    .authorRole("COMPANY")
+                    .build();
+
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                    .thenReturn(Optional.of(incident));
+            when(commentRepository.findAllByIncident_IncidentIdOrderByCreatedAtAsc(1L))
+                    .thenReturn(List.of(comment));
+            when(incidentMapper.toCommentResponse(comment))
+                    .thenReturn(commentResponse);
+
+            List<CommentResponse> result = incidentService.getComments(1L);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.getFirst()).isEqualTo(commentResponse);
+            verify(commentRepository).findAllByIncident_IncidentIdOrderByCreatedAtAsc(1L);
+            verify(incidentMapper).toCommentResponse(comment);
+        }
+
+        @Test
+        void getComments_shouldReturnEmptyListWhenNoComments() {
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                    .thenReturn(Optional.of(incident));
+            when(commentRepository.findAllByIncident_IncidentIdOrderByCreatedAtAsc(1L))
+                    .thenReturn(List.of());
+
+            List<CommentResponse> result = incidentService.getComments(1L);
+
+            assertThat(result).isEmpty();
+            verify(commentRepository).findAllByIncident_IncidentIdOrderByCreatedAtAsc(1L);
+            verify(incidentMapper, never()).toCommentResponse(any());
+        }
+
+        @Test
+        void getComments_shouldThrowWhenIncidentNotFound() {
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                    .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> incidentService.getComments(1L))
+                    .isInstanceOf(IncidentNotFoundException.class)
+                    .hasMessageContaining("Incident not found");
+
+            verify(commentRepository, never())
+                    .findAllByIncident_IncidentIdOrderByCreatedAtAsc(anyLong());
+        }
+
+        @Test
+        void getComments_shouldThrowWhenIdIsInvalid() {
+            assertThatThrownBy(() -> incidentService.getComments(0L))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Invalid id");
+
+            assertThatThrownBy(() -> incidentService.getComments(null))
+                    .isInstanceOf(IllegalArgumentException.class);
+
+            verifyNoInteractions(commentRepository);
+        }
+
+        @Test
+        void getComments_shouldPropagateRepositoryError() {
+            when(incidentRepository.findByIncidentIdAndSoftDeletedFalse(1L))
+                    .thenReturn(Optional.of(incident));
+            when(commentRepository.findAllByIncident_IncidentIdOrderByCreatedAtAsc(1L))
+                    .thenThrow(new RuntimeException("DB connection failed"));
+
+            assertThatThrownBy(() -> incidentService.getComments(1L))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("DB connection failed");
+        }
+    }
 }
-}
+

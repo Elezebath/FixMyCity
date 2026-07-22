@@ -19,5 +19,7 @@ public interface IncidentService {
     IncidentResponse assignToCompany(Long incidentId, AssignIncidentRequest request, Long performedById);
     IncidentResponse resolveByCompany(Long incidentId, ResolveIncidentRequest request, String resolvedByEmail);
     List<IncidentStatusHistoryResponse> getStatusHistory(Long incidentId, Long requesterId, Role requesterRole);
+    List<CommentResponse> getComments(Long incidentId);
 }
+
 

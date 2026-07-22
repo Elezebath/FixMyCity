@@ -329,6 +329,56 @@ class SecurityConfigTest {
     }
 
     // ---------------------------------------------------------------
+    // GET /api/incidents/{id}/comments — authenticated, any role
+    // ---------------------------------------------------------------
+    @Nested
+    class IncidentCommentsReadAccess {
+
+        @Test
+        void getComments_withoutAuth_returns401() throws Exception {
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        void getIncidentById_stillPublic_whileCommentsRequireAuth() throws Exception {
+            mockMvc.perform(get("/api/incidents/1"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @WithMockUser(roles = "CITIZEN")
+        void getComments_asCitizen_isNotUnauthorized() throws Exception {
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+        }
+
+        @Test
+        @WithMockUser(roles = "COMPANY")
+        void getComments_asCompany_isNotUnauthorized() throws Exception {
+            // No role restriction — any authenticated user, not just CITIZEN.
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+        }
+
+        @Test
+        @WithMockUser(roles = "MANAGER")
+        void getComments_asManager_isNotUnauthorized() throws Exception {
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        void getComments_asAdmin_isNotUnauthorized() throws Exception {
+            mockMvc.perform(get("/api/incidents/1/comments"))
+                    .andExpect(status().is(org.hamcrest.Matchers.not(401)));
+        }
+    }
+
+    // ---------------------------------------------------------------
     // Fallback: anyRequest().authenticated()
     // ---------------------------------------------------------------
     @Nested
