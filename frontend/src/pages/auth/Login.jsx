@@ -247,17 +247,6 @@ function Login() {
                                 />
                             </label>
 
-                            <label>
-                                Phone
-                                <input
-                                    name="phone"
-                                    value={registerForm.phone}
-                                    onChange={handleRegisterChange}
-                                    placeholder="+371 23456789"
-                                    disabled={isRegistering}
-                                />
-                            </label>
-
                             {registerError && <p className="login-error">{registerError}</p>}
 
                             <button type="submit" className="login-submit" disabled={isRegistering}>
