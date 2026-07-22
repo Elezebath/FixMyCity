@@ -38,13 +38,6 @@ const RECENT = [
     },
 ];
 
-const STATUS_CLASS = {
-    Open: 'badge badge--open',
-    Assigned: 'badge badge--assigned',
-    'In progress': 'badge badge--progress',
-    Resolved: 'badge badge--resolved',
-};
-
 function StatusBadge({ status }) {
     return <span className={STATUS_CLASS[status] || 'badge'}>{formatStatus(status)}</span>;
 }
