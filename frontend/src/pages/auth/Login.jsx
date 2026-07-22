@@ -176,6 +176,11 @@ function Login() {
                                     disabled={isLoggingIn}
                                 />
                             </label>
+                            <div className="forgot-password-link">
+                                <Link to="/forgot-password" className="login-link">
+                                    Forgot your password?
+                                </Link>
+                            </div>
 
                             {loginError && <p className="login-error">{loginError}</p>}
 
