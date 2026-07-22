@@ -3,41 +3,6 @@ import { Link } from 'react-router-dom';
 import { getMyIncidents } from '../../services/incidentService';
 import { normalizeIncident, formatStatus, formatRelative, STATUS_CLASS } from '../../utils/incidentHelpers';
 import './Dashboard.css';
-
-const STATS = [
-    { label: 'Total incidents', value: 3, icon: '📋', tone: 'neutral' },
-    { label: 'Open', value: 1, icon: '⚠️', tone: 'open' },
-    { label: 'In progress', value: 1, icon: '🔧', tone: 'progress' },
-    { label: 'Resolved', value: 1, icon: '✅', tone: 'resolved' },
-];
-
-const RECENT = [
-    {
-        id: 1005,
-        title: 'Damaged pedestrian crossing sign',
-        location: 'School Rd near Lincoln Elementary',
-        category: 'Public Safety',
-        status: 'Open',
-        reported: '8h ago',
-    },
-    {
-        id: 1001,
-        title: 'Large pothole on Main St',
-        location: '221 Main Street, near 5th Ave crossing',
-        category: 'Road & Potholes',
-        status: 'Assigned',
-        reported: '4d ago',
-    },
-    {
-        id: 1003,
-        title: 'Overflowing garbage bin',
-        location: 'Corner of Elm & Oak, near bus stop',
-        category: 'Waste & Sanitation',
-        status: 'Resolved',
-        reported: '10d ago',
-    },
-];
-
 function StatusBadge({ status }) {
     return <span className={STATUS_CLASS[status] || 'badge'}>{formatStatus(status)}</span>;
 }
