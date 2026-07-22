@@ -8,6 +8,7 @@ import lv.acnbootcamp.fixmycity.exception.incident.InvalidIncidentException;
 import lv.acnbootcamp.fixmycity.exception.incident.InvalidPriorityException;
 import lv.acnbootcamp.fixmycity.exception.incident.InvalidStatusException;
 import lv.acnbootcamp.fixmycity.exception.category.CategoryNotFoundException;
+import lv.acnbootcamp.fixmycity.exception.user.CompanyAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.exception.user.CompanyNotFoundException;
 import lv.acnbootcamp.fixmycity.exception.user.EmailAlreadyExistsException;
 import lv.acnbootcamp.fixmycity.exception.user.UserNotFoundException;
@@ -282,5 +283,18 @@ public class GlobalExceptionHandler {
         body.put(ERROR, ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    /**
+     * Returns 409 when a company with the same name already exists.
+     */
+    @ExceptionHandler(CompanyAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleCompanyAlreadyExists(
+            CompanyAlreadyExistsException ex) {
+
+        Map<String, String> body = new HashMap<>();
+        body.put(ERROR, ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 }

@@ -10,8 +10,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CompanyResponse {
+
     private Long companyId;
     private String companyName;
+    private String registrationNo;
+    private Long categoryId;
     private String contactEmail;
+    private String contactPhone;
+    private String address;
     private Boolean active;
 }
