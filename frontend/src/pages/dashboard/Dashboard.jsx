@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import './Dashboard.css';
 
-// TODO: GET /api/incidents
 const STATS = [
     { label: 'Total incidents', value: 3, icon: '📋', tone: 'neutral' },
     { label: 'Open', value: 1, icon: '⚠️', tone: 'open' },

@@ -26,7 +26,6 @@ public class IncidentTestDataBuilder {
     private Boolean softDeleted = false;
     private ArrayList<Attachment> attachments = new ArrayList<>();
     private ArrayList<Comment> comments = new ArrayList<>();
-    private ArrayList<IncidentAssignment> assignments = new ArrayList<>();
     private ArrayList<IncidentStatusHistory> statusHistory = new ArrayList<>();
 
     private IncidentTestDataBuilder() {
@@ -103,10 +102,6 @@ public class IncidentTestDataBuilder {
         return this;
     }
 
-    public IncidentTestDataBuilder withAssignments(ArrayList<IncidentAssignment> assignments) {
-        this.assignments = assignments;
-        return this;
-    }
 
     public IncidentTestDataBuilder withStatusHistory(ArrayList<IncidentStatusHistory> statusHistory) {
         this.statusHistory = statusHistory;
@@ -128,8 +123,8 @@ public class IncidentTestDataBuilder {
                 .softDeleted(softDeleted)
                 .attachments(attachments)
                 .comments(comments)
-                .assignments(assignments)
                 .statusHistory(statusHistory)
                 .build();
+
     }
 }
