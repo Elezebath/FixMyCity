@@ -135,10 +135,13 @@ function IncidentDetail() {
     const showAssign =
         isManagerOrAdmin() && incident && !isResolved;
 
-    // COMPANY role only; hide when already resolved.
-    // Backend also checks assigned company match — we cannot know companyId from
-    // IncidentResponse (not included), so we show the button and surface API errors.
-    const showResolve = isCompany() && incident && !isResolved;
+    // COMPANY and MANAGER/ADMIN roles can resolve incidents.
+    // The backend enforces authorization (e.g. assigned company or manager),
+    // so the frontend only controls button visibility.
+    const showResolve =
+        (isCompany() || isManagerOrAdmin()) &&
+        incident &&
+        !isResolved;
 
     const handleAssign = async (e) => {
         e.preventDefault();
