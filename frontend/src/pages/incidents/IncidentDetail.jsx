@@ -3,10 +3,12 @@ import { Link, useParams } from 'react-router-dom';
 import {
     getIncident,
     getIncidentStatusHistory,
+    getIncidentComments,
     assignCompany,
     resolveIncident,
 } from '../../services/incidentService.js';
-import { isManagerOrAdmin, isCompany } from '../../utils/auth.js';
+import { isManagerOrAdmin, isCompany, hasRole } from '../../utils/auth.js';
+
 import {
     STATUS_CLASS,
     formatStatus,
@@ -47,6 +49,9 @@ function IncidentDetail() {
     const { id } = useParams();
     const [incident, setIncident] = useState(null);
     const [history, setHistory] = useState([]);
+    const [comments, setComments] = useState([]);
+    const [commentsLoading, setCommentsLoading] = useState(false);
+    const [commentsError, setCommentsError] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [notFound, setNotFound] = useState(false);
@@ -58,6 +63,28 @@ function IncidentDetail() {
     const [comment, setComment] = useState('');
     const [resolveError, setResolveError] = useState('');
     const [resolving, setResolving] = useState(false);
+
+    const [assignOpen, setAssignOpen] = useState(false);
+    const [assignError, setAssignError] = useState('');
+    const [assigning, setAssigning] = useState(false);
+
+    const loadComments = useCallback(async (numericId) => {
+        setCommentsLoading(true);
+        setCommentsError('');
+        try {
+            const data = await getIncidentComments(numericId);
+            setComments(Array.isArray(data) ? data : []);
+        } catch (err) {
+            if (err.status === 403 || err.status === 401) {
+                setComments([]);
+                setCommentsError('');
+            } else {
+                setCommentsError(err.message || 'Failed to load comments.');
+            }
+        } finally {
+            setCommentsLoading(false);
+        }
+    }, []);
 
     const load = useCallback(async () => {
         const numericId = Number(id);
@@ -76,6 +103,9 @@ function IncidentDetail() {
 
             const historyData = await getIncidentStatusHistory(numericId);
             setHistory(historyData);
+
+            // Load comments in parallel for authorized roles only
+            await loadComments(numericId);
         } catch (err) {
             if (err.status === 404) {
                 setNotFound(true);
@@ -85,7 +115,8 @@ function IncidentDetail() {
         } finally {
             setLoading(false);
         }
-    }, [id]);
+    }, [id, loadComments]);
+
 
     useEffect(() => {
         load();
@@ -318,8 +349,12 @@ function IncidentDetail() {
 
                                         <div>
                                             <p className="incident-detail__activity-text">
-                                                <strong>{formatStatus(item.oldStatus)}</strong>
-                                                {' → '}
+                                                {item.oldStatus && (
+                                                    <>
+                                                        <strong>{formatStatus(item.oldStatus)}</strong>
+                                                        {' → '}
+                                                    </>
+                                                )}
                                                 <strong>{formatStatus(item.newStatus)}</strong>
                                             </p>
 
@@ -344,7 +379,64 @@ function IncidentDetail() {
                             </ul>
                         )}
                     </div>
+
+                    <div className="incident-detail__card">
+                        <h3>Comments</h3>
+
+                        {commentsLoading && (
+                            <p className="incident-detail__state">Loading comments…</p>
+                        )}
+
+                        {!commentsLoading && commentsError && (
+                            <div className="incident-detail__comments-error">
+                                <p className="incident-detail__error" role="alert">
+                                    {commentsError}
+                                </p>
+                                <button
+                                    type="button"
+                                    className="incident-detail__btn"
+                                    onClick={() => loadComments(Number(id))}
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        )}
+
+                        {!commentsLoading && !commentsError && comments.length === 0 && (
+                            <p className="incident-detail__muted">
+                                No comments yet.
+                            </p>
+                        )}
+
+                        {!commentsLoading && !commentsError && comments.length > 0 && (
+                            <ul className="incident-detail__comments">
+                                {comments.map((item) => (
+                                    <li key={item.commentId} className="incident-detail__comment">
+                                        <div className="incident-detail__comment-header">
+                                                <span className="incident-detail__comment-author">
+                                                    {item.authorName || 'Unknown'}
+                                                </span>
+                                            {item.authorRole && (
+                                                <span className="incident-detail__comment-role">
+                                                        {item.authorRole}
+                                                    </span>
+                                            )}
+                                            {item.createdAt && (
+                                                <span className="incident-detail__comment-time">
+                                                        {formatDateTime(item.createdAt)}
+                                                    </span>
+                                            )}
+                                        </div>
+                                        <p className="incident-detail__comment-body">
+                                            {item.comment}
+                                        </p>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
                 </div>
+
 
                 <aside className="incident-detail__card incident-detail__side">
                     <h3>Details</h3>

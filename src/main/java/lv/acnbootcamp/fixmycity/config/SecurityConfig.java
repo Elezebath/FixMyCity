@@ -110,6 +110,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/incidents/my").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/incidents/*/comments").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/incidents/**").permitAll()
                         // Citizen-accessible category list for the create-incident form
                         .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**").authenticated()

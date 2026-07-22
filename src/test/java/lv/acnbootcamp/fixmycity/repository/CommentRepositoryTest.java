@@ -143,4 +143,36 @@ class CommentRepositoryTest {
 
         assertThat(exists).isFalse();
     }
+
+    @Test
+    void findAllByIncident_IncidentIdOrderByCreatedAtAsc_shouldReturnCommentsInOrder() {
+        Comment first = commentRepository.save(buildComment("First comment"));
+        Comment second = commentRepository.save(buildComment("Second comment"));
+        entityManager.flush();
+
+        List<Comment> result = commentRepository.findAllByIncident_IncidentIdOrderByCreatedAtAsc(incident.getIncidentId());
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getCommentId()).isEqualTo(first.getCommentId());
+        assertThat(result.get(1).getCommentId()).isEqualTo(second.getCommentId());
+        assertThat(result.get(0).getComment()).isEqualTo("First comment");
+        assertThat(result.get(1).getComment()).isEqualTo("Second comment");
+    }
+
+    @Test
+    void findAllByIncident_IncidentIdOrderByCreatedAtAsc_shouldReturnEmptyWhenNoComments() {
+        List<Comment> result = commentRepository.findAllByIncident_IncidentIdOrderByCreatedAtAsc(incident.getIncidentId());
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void findAllByIncident_IncidentIdOrderByCreatedAtAsc_shouldReturnEmptyForUnknownIncident() {
+        commentRepository.save(buildComment("Test Comment"));
+
+        List<Comment> result = commentRepository.findAllByIncident_IncidentIdOrderByCreatedAtAsc(99999L);
+
+        assertThat(result).isEmpty();
+    }
 }
+

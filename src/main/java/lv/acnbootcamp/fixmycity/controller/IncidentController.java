@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lv.acnbootcamp.fixmycity.dto.incident.AssignIncidentRequest;
+import lv.acnbootcamp.fixmycity.dto.incident.CommentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.CreateIncidentRequest;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentStatusHistoryResponse;
@@ -194,6 +195,29 @@ public class IncidentController {
 
         return incidentService.getStatusHistory(id, requesterId, requesterRole);
     }
+
+    @GetMapping("/{id}/comments")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(
+            summary = "Get all comments for an incident",
+            description = "Returns all comments for the given incident, ordered by creation time ascending. "
+                    + "Restricted to authenticated users with ADMIN, MANAGER, or COMPANY roles."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Comments retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid incident ID"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden — role not allowed"),
+            @ApiResponse(responseCode = "404", description = "Incident not found")
+    })
+    public List<CommentResponse> getComments(
+            @Parameter(description = "Incident ID", example = "1")
+            @PathVariable @Positive(message = "Incident ID must be positive") Long id) {
+
+        log.info("REST request to fetch comments for incident {}", id);
+        return incidentService.getComments(id);
+    }
+
 
     @PatchMapping("/{id}/assign")
 

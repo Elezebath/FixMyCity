@@ -221,6 +221,9 @@ public class IncidentServiceImpl implements IncidentService {
             }
         }
 
+        recordStatusChange(savedIncident, null, IncidentStatus.NEW, citizenId,
+                "New incident has been created");
+
         return incidentMapper.toResponse(savedIncident);
     }
 
@@ -318,7 +321,7 @@ public class IncidentServiceImpl implements IncidentService {
         commentRepository.save(comment);
 
         recordStatusChange(savedIncident, oldStatus, IncidentStatus.RESOLVED, resolvedBy.getId(),
-                request.getComment());
+                "Incident has been resolved");
 
         log.info("Incident {} resolved by {}", incidentId, resolvedByEmail);
 
@@ -380,6 +383,28 @@ public class IncidentServiceImpl implements IncidentService {
                 .map(history -> incidentMapper.toStatusHistoryResponse(history, includeChangedBy))
                 .toList();
     }
+
+    /**
+     * Get all comments for an incident, ordered by creation time ascending.
+     * Access is restricted at the security layer to ADMIN, MANAGER, and COMPANY roles.
+     */
+    @Override
+    public List<CommentResponse> getComments(Long incidentId) {
+        validateId(incidentId);
+
+        incidentRepository.findByIncidentIdAndSoftDeletedFalse(incidentId)
+                .orElseThrow(() -> new IncidentNotFoundException(
+                        "Incident not found with id: " + incidentId));
+
+        log.info("Fetching comments for incident {}", incidentId);
+
+        return commentRepository
+                .findAllByIncident_IncidentIdOrderByCreatedAtAsc(incidentId)
+                .stream()
+                .map(incidentMapper::toCommentResponse)
+                .toList();
+    }
+
 
     private void recordStatusChange(Incident incident, IncidentStatus oldStatus, IncidentStatus newStatus,
                                     Long changedById, String remarks) {

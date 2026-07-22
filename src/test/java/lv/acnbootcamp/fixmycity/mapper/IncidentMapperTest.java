@@ -1,20 +1,25 @@
 package lv.acnbootcamp.fixmycity.mapper;
 
 import lv.acnbootcamp.fixmycity.dto.incident.AttachmentResponse;
+import lv.acnbootcamp.fixmycity.dto.incident.CommentResponse;
 import lv.acnbootcamp.fixmycity.dto.incident.IncidentResponse;
 import lv.acnbootcamp.fixmycity.entity.*;
 import lv.acnbootcamp.fixmycity.entity.incident.Attachment;
+import lv.acnbootcamp.fixmycity.entity.incident.Comment;
 import lv.acnbootcamp.fixmycity.entity.incident.Incident;
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentPriority;
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatus;
+import lv.acnbootcamp.fixmycity.entity.user.Role;
 import lv.acnbootcamp.fixmycity.entity.user.User;
 import lv.acnbootcamp.fixmycity.util.UserTestDataBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 
 class IncidentMapperTest {
 
@@ -203,4 +208,61 @@ class IncidentMapperTest {
         assertThat(response.getAttachment().getAttachmentId()).isEqualTo(1L);
         assertThat(response.getAttachment().getFileName()).isEqualTo("first.jpg");
     }
+
+    @Test
+    void shouldMapCommentToResponse() {
+        User author = UserTestDataBuilder.aUser()
+                .withId(50L)
+                .withFullName("Jane Smith")
+                .withRole(Role.COMPANY)
+                .build();
+
+        Incident incident = Incident.builder()
+                .incidentId(101L)
+                .build();
+
+        Comment comment = Comment.builder()
+                .commentId(7L)
+                .incident(incident)
+                .user(author)
+                .comment("Replaced the light fixture.")
+                .build();
+        comment.setCreatedAt(LocalDateTime.of(2026, 7, 18, 15, 55));
+
+        CommentResponse response = incidentMapper.toCommentResponse(comment);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getCommentId()).isEqualTo(7L);
+        assertThat(response.getIncidentId()).isEqualTo(101L);
+        assertThat(response.getComment()).isEqualTo("Replaced the light fixture.");
+        assertThat(response.getAuthorName()).isEqualTo("Jane Smith");
+        assertThat(response.getAuthorRole()).isEqualTo("COMPANY");
+        assertThat(response.getCreatedAt()).isEqualTo(LocalDateTime.of(2026, 7, 18, 15, 55));
+    }
+
+    @Test
+    void shouldReturnNullWhenCommentIsNull() {
+        CommentResponse response = incidentMapper.toCommentResponse(null);
+
+        assertThat(response).isNull();
+    }
+
+    @Test
+    void shouldMapCommentWithNullUserGracefully() {
+        Incident incident = Incident.builder().incidentId(5L).build();
+        Comment comment = Comment.builder()
+                .commentId(1L)
+                .incident(incident)
+                .user(null)
+                .comment("Anonymous note")
+                .build();
+
+        CommentResponse response = incidentMapper.toCommentResponse(comment);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getAuthorName()).isNull();
+        assertThat(response.getAuthorRole()).isNull();
+        assertThat(response.getComment()).isEqualTo("Anonymous note");
+    }
 }
+
