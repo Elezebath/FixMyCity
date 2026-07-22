@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import AdminRoute from './components/AdminRoute.jsx';
+import ManagerOrAdminRoute from './components/ManagerOrAdminRoute.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 import Login from './pages/auth/Login.jsx';
 import Dashboard from './pages/dashboard/Dashboard.jsx';
@@ -41,9 +42,9 @@ function App() {
                     <Route path="incidents/:id" element={<IncidentDetail />} />
                     <Route path="report" element={<ReportIssue />} />
                     <Route path="assignment" element={
-                        ['MANAGER', 'ADMIN'].includes(
-                            JSON.parse(localStorage.getItem('user') || 'null')?.role
-                        ) ? <Assignment /> : <NotFound />
+                        <ManagerOrAdminRoute>
+                            <Assignment />
+                        </ManagerOrAdminRoute>
                     } />
                     <Route path="admin/logs" element={
                         <AdminRoute>
