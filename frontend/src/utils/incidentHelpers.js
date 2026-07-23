@@ -26,12 +26,36 @@ export function formatStatus(status) {
     return String(status).replace(/_/g, ' ');
 }
 
+/** Target timezone for all displayed timestamps. */
+const DISPLAY_TZ = 'Europe/Riga';
+
+/**
+ * Backend sends naive LocalDateTime strings (e.g. "2026-07-13T14:30:00") with
+ * no timezone/offset info. The DB stores these in UTC (confirmed via
+ * `SELECT @@system_time_zone;` -> UTC), so without correction `new Date(...)`
+ * would parse them using the *browser's* local timezone instead of UTC,
+ * silently shifting every timestamp by the viewer's offset.
+ *
+ * This appends 'Z' to naive strings so they're parsed as UTC instants.
+ * Strings that already carry an explicit offset/zone (e.g. end in 'Z' or
+ * '+02:00') are passed through unchanged.
+ */
+function parseAsUtc(value) {
+    if (value instanceof Date) return value;
+    if (typeof value !== 'string') return new Date(value);
+
+    const hasExplicitOffset = /Z$|[+-]\d{2}:\d{2}$/.test(value);
+    const iso = hasExplicitOffset ? value : `${value}Z`;
+    return new Date(iso);
+}
+
 export function formatDateTime(value) {
     if (!value) return '—';
     try {
-        const d = new Date(value);
+        const d = parseAsUtc(value);
         if (Number.isNaN(d.getTime())) return String(value);
-        return d.toLocaleString(undefined, {
+        return d.toLocaleString('en-GB', {
+            timeZone: DISPLAY_TZ,
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -46,7 +70,7 @@ export function formatDateTime(value) {
 export function formatRelative(value) {
     if (!value) return '';
     try {
-        const d = new Date(value);
+        const d = parseAsUtc(value);
         const diffMs = Date.now() - d.getTime();
         if (Number.isNaN(diffMs)) return '';
         const mins = Math.floor(diffMs / 60000);
@@ -59,6 +83,22 @@ export function formatRelative(value) {
         return formatDateTime(value);
     } catch {
         return '';
+    }
+}
+
+export function formatDate(value) {
+    if (!value) return '—';
+    try {
+        const d = parseAsUtc(value);
+        if (Number.isNaN(d.getTime())) return String(value);
+        return d.toLocaleDateString('en-GB', {
+            timeZone: DISPLAY_TZ,
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+    } catch {
+        return String(value);
     }
 }
 

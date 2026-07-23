@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { normalizeIncident } from '../../utils/incidentHelpers.js';
+import { normalizeIncident, formatDate } from '../../utils/incidentHelpers.js';
 import './Assignment.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
@@ -128,7 +128,7 @@ export default function Assignment() {
                             <td className="assignment-table__category">{incident.category}</td>
                             <td className="assignment-table__location">{incident.address}</td>
                             <td className="assignment-table__date">
-                                {new Date(incident.createdAt).toLocaleDateString()}
+                                {formatDate(incident.createdAt)}
                             </td>
                             <td>
                                 <button className="assign-btn" onClick={() => openAssignModal(incident)}>

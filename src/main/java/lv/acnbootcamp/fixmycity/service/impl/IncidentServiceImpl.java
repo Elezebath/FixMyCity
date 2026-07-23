@@ -272,7 +272,8 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     @Transactional
-    public IncidentResponse resolveByCompany(Long incidentId, ResolveIncidentRequest request, String resolvedByEmail) {
+    public IncidentResponse resolveByCompany(Long incidentId, ResolveIncidentRequest request,
+                                             String resolvedByEmail) {
         validateId(incidentId);
 
         if (request == null || !StringUtils.hasText(request.getComment())) {
@@ -285,25 +286,25 @@ public class IncidentServiceImpl implements IncidentService {
                         "Incident not found with id: " + incidentId));
 
         if (incident.getStatus() == IncidentStatus.RESOLVED) {
-            throw new InvalidIncidentException(
-                    "Incident has already been resolved."
-            );
+            throw new InvalidIncidentException("Incident has already been resolved.");
         }
 
         if (incident.getStatus() != IncidentStatus.ASSIGNED) {
-            throw new InvalidIncidentException(
-                    "Incident must be assigned before it can be resolved."
-            );
+            throw new InvalidIncidentException("Incident must be assigned before it can be resolved.");
         }
 
         User resolvedBy = userRepository.findByEmail(resolvedByEmail)
                 .orElseThrow(() -> new UserNotFoundException(
                         "User not found with email: " + resolvedByEmail));
 
-        if (incident.getAssignedCompany() == null
-                || resolvedBy.getCompany() == null
-                || !incident.getAssignedCompany().getCompanyId().equals(resolvedBy.getCompany().getCompanyId())) {
-            throw new InvalidIncidentException("Only the assigned company can resolve this incident");
+        boolean isPrivileged = resolvedBy.getRole() == Role.MANAGER || resolvedBy.getRole() == Role.ADMIN;
+
+        if (!isPrivileged) {
+            if (incident.getAssignedCompany() == null
+                    || resolvedBy.getCompany() == null
+                    || !incident.getAssignedCompany().getCompanyId().equals(resolvedBy.getCompany().getCompanyId())) {
+                throw new InvalidIncidentException("Only the assigned company can resolve this incident");
+            }
         }
 
         IncidentStatus oldStatus = incident.getStatus();

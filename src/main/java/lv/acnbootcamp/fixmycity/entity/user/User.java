@@ -9,7 +9,6 @@ import lombok.Setter;
 import lv.acnbootcamp.fixmycity.entity.incident.Comment;
 import lv.acnbootcamp.fixmycity.entity.Company;
 import lv.acnbootcamp.fixmycity.entity.incident.Incident;
-import lv.acnbootcamp.fixmycity.entity.incident.IncidentAssignment;
 import lv.acnbootcamp.fixmycity.entity.incident.IncidentStatusHistory;
 
 import java.time.LocalDateTime;
@@ -64,10 +63,6 @@ public class User {
     @OneToMany(mappedBy = "citizen")
     @Builder.Default
     private List<Incident> reportedIncidents = new ArrayList<>();
-
-    @OneToMany(mappedBy = "assignedBy")
-    @Builder.Default
-    private List<IncidentAssignment> createdAssignments = new ArrayList<>();
 
     @OneToMany(mappedBy = "changedBy")
     @Builder.Default
